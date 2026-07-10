@@ -19,6 +19,9 @@ def reset_database():
 
 
 def test_openapi_docs_exposes_all_three_endpoints():
+    response = client.get("/")
+    assert response.status_code == 200
+
     response = client.get("/docs")
     assert response.status_code == 200
 

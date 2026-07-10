@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple FastAPI User API</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/frontend/styles.css" />
   </head>
   <body>
     <main class="shell">
@@ -18,7 +18,7 @@
           <span class="status-dot"></span>
           <div>
             <strong>Live API tester</strong>
-            <p>Uses the same backend at <code>/signup</code>, <code>/login</code>, and <code>/users/{id}</code>.</p>
+            <p>Uses the backend at <code>http://127.0.0.1:8000</code>.</p>
           </div>
         </div>
       </header>
@@ -80,6 +80,28 @@
         </div>
       </section>
 
+      <section class="card chat-card">
+        <div class="output-header">
+          <h2>Live AI Chat</h2>
+          <span class="hint">Connects to <code>/ws/chat</code></span>
+        </div>
+        <div class="chat-controls stack">
+          <div class="chat-status-row">
+            <span id="chat-status" class="chat-status offline">Disconnected</span>
+            <button id="connect-chat" type="button">Connect</button>
+            <button id="disconnect-chat" type="button" class="ghost">Disconnect</button>
+          </div>
+          <form id="chat-form" class="stack chat-form">
+            <label>
+              Message
+              <input name="chat_message" type="text" placeholder="Say hello to the bot" autocomplete="off" required />
+            </label>
+            <button type="submit">Send message</button>
+          </form>
+          <div id="chat-log" class="chat-log"></div>
+        </div>
+      </section>
+
       <section class="card output-card">
         <div class="output-header">
           <h2>Response</h2>
@@ -89,6 +111,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js"></script>
+    <script src="/frontend/app.js"></script>
   </body>
 </html>

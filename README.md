@@ -2,7 +2,8 @@
 
 A small FastAPI project with a single `users` table, basic signup/login endpoints, and a modular folder structure.
 
-It now includes a lightweight browser UI at `/` so you can test the endpoints without using Swagger.
+It now includes a separate browser frontend in `frontend/` so you can test the endpoints without using Swagger.
+It also includes a tiny live chat WebSocket for quick AI-bot style experiments.
 
 ## What It Does
 
@@ -78,13 +79,35 @@ Then open:
 
 ## Browser UI
 
-The root page provides three simple forms:
+The frontend lives in the top-level `frontend/` folder and stays separate from the backend code.
+
+The backend serves that frontend at the project root, so you only need the FastAPI server running.
+
+Open:
+
+- Frontend app: http://127.0.0.1:8000/
+
+The page provides three simple forms:
 
 - Sign Up creates a user with `POST /signup`
 - Login authenticates with `POST /login`
 - Get User fetches public info with `GET /users/{user_id}`
 
 Responses are printed in a readable JSON panel so you can test success and failure cases quickly.
+
+The frontend calls the same origin backend directly.
+
+### WebSocket Chat
+
+The frontend also includes a tiny live chat panel that connects to `ws://127.0.0.1:8000/ws/chat`.
+
+It is intentionally simple:
+
+- connect
+- send a message
+- receive a small bot-style reply
+
+This is a good starting point if you want to replace the reply logic later with a real AI model.
 
 ## Endpoints
 
@@ -170,6 +193,7 @@ The tests cover:
 - Successful signup, login, and user lookup
 - Duplicate email rejection
 - Wrong password rejection
+- WebSocket chat reply behavior
 
 ## Notes
 
