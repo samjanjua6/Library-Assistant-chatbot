@@ -1,9 +1,30 @@
 const output = document.getElementById('output');
 const clearButton = document.getElementById('clear-output');
+const userPreview = document.getElementById('user-preview');
 
 function writeOutput(value, isError = false) {
   output.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
   output.style.color = isError ? '#fecdd3' : '#dbeafe';
+}
+
+function renderUserPreview(user) {
+  userPreview.classList.remove('empty');
+  userPreview.innerHTML = `
+    <p class="user-title">${user.username}</p>
+    <dl>
+      <dt>ID</dt>
+      <dd>${user.id}</dd>
+      <dt>Email</dt>
+      <dd>${user.email}</dd>
+      <dt>Created At</dt>
+      <dd>${user.created_at}</dd>
+    </dl>
+  `;
+}
+
+function resetUserPreview() {
+  userPreview.classList.add('empty');
+  userPreview.innerHTML = '<p>No user loaded yet. Enter a user id above and click <strong>Fetch user</strong>.</p>';
 }
 
 async function sendRequest(url, options) {
@@ -67,11 +88,14 @@ document.getElementById('user-form').addEventListener('submit', async (event) =>
   try {
     const data = await sendRequest(`/users/${userId}`);
     writeOutput(data);
+    renderUserPreview(data);
   } catch (error) {
     writeOutput(error.message, true);
+    resetUserPreview();
   }
 });
 
 clearButton.addEventListener('click', () => {
   writeOutput('Use one of the forms above to test the API.');
+  resetUserPreview();
 });

@@ -168,12 +168,56 @@ button.ghost {
   margin-top: 18px;
 }
 
+.user-card {
+  margin-top: 18px;
+}
+
 .output-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.user-preview {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.user-preview.empty {
+  color: var(--muted);
+}
+
+.user-preview dl {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.user-preview dt {
+  color: var(--muted);
+}
+
+.user-preview dd {
+  margin: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.user-preview .user-title {
+  margin: 0;
+  font-size: 1.1rem;
 }
 
 pre {
