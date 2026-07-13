@@ -1,185 +1,103 @@
-const API_BASE_URL = window.location.origin;
+'use strict';
 
-const output = document.getElementById('output');
-const clearButton = document.getElementById('clear-output');
-const userPreview = document.getElementById('user-preview');
-const chatLog = document.getElementById('chat-log');
-const chatStatus = document.getElementById('chat-status');
-const connectChatButton = document.getElementById('connect-chat');
-const disconnectChatButton = document.getElementById('disconnect-chat');
-const chatForm = document.getElementById('chat-form');
+// ── helpers ────────────────────────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
 
-let chatSocket = null;
-
-function writeOutput(value, isError = false) {
-  output.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
-  output.style.color = isError ? '#fecdd3' : '#dbeafe';
+function showAlert(message, type = 'error') {
+  const el = $('auth-alert');
+  el.textContent = message;
+  el.className = `auth-alert ${type}`;
+  el.classList.remove('hidden');
 }
 
-function renderUserPreview(user) {
-  userPreview.classList.remove('empty');
-  userPreview.innerHTML = `
-    <p class="user-title">${user.username}</p>
-    <dl>
-      <dt>ID</dt>
-      <dd>${user.id}</dd>
-      <dt>Email</dt>
-      <dd>${user.email}</dd>
-      <dt>Created At</dt>
-      <dd>${user.created_at}</dd>
-    </dl>
-  `;
+function hideAlert() {
+  $('auth-alert').className = 'auth-alert hidden';
 }
 
-function resetUserPreview() {
-  userPreview.classList.add('empty');
-  userPreview.innerHTML = '<p>No user loaded yet. Enter a user id above and click <strong>Fetch user</strong>.</p>';
+function setLoading(btnId, loading) {
+  const btn = $(btnId);
+  btn.disabled = loading;
+  btn.querySelector('.btn-text').classList.toggle('hidden', loading);
+  btn.querySelector('.btn-spinner').classList.toggle('hidden', !loading);
 }
 
-function addChatLine(text, type = 'system') {
-  const item = document.createElement('div');
-  item.className = `chat-message ${type}`;
-  item.textContent = text;
-  chatLog.appendChild(item);
-  chatLog.scrollTop = chatLog.scrollHeight;
+async function apiPost(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
+  return data;
 }
 
-function setChatStatus(online, label) {
-  chatStatus.textContent = label;
-  chatStatus.classList.toggle('online', online);
-  chatStatus.classList.toggle('offline', !online);
+// ── redirect if already authenticated ─────────────────────────────────────
+if (localStorage.getItem('zylo_token')) {
+  window.location.replace('/chat');
 }
 
-function connectChat() {
-  if (chatSocket && (chatSocket.readyState === WebSocket.OPEN || chatSocket.readyState === WebSocket.CONNECTING)) {
-    return;
-  }
+// ── tab switching ──────────────────────────────────────────────────────────
+function showPanel(name) {
+  hideAlert();
+  const isLogin = name === 'login';
 
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  chatSocket = new WebSocket(`${protocol}//${window.location.host}/ws/chat`);
+  $('panel-login').classList.toggle('hidden', !isLogin);
+  $('panel-signup').classList.toggle('hidden', isLogin);
 
-  setChatStatus(false, 'Connecting...');
+  $('tab-login').classList.toggle('active', isLogin);
+  $('tab-login').setAttribute('aria-selected', String(isLogin));
 
-  chatSocket.onopen = () => {
-    setChatStatus(true, 'Connected');
-    addChatLine('Connected to the AI bot.', 'system');
-  };
-
-  chatSocket.onmessage = (event) => {
-    addChatLine(event.data, 'bot');
-  };
-
-  chatSocket.onclose = () => {
-    setChatStatus(false, 'Disconnected');
-    addChatLine('Chat disconnected.', 'system');
-  };
-
-  chatSocket.onerror = () => {
-    addChatLine('Chat error. Check the backend server.', 'system');
-  };
+  $('tab-signup').classList.toggle('active', !isLogin);
+  $('tab-signup').setAttribute('aria-selected', String(!isLogin));
 }
 
-function disconnectChat() {
-  if (chatSocket) {
-    chatSocket.close();
-    chatSocket = null;
-  }
-}
+$('tab-login').addEventListener('click',  () => showPanel('login'));
+$('tab-signup').addEventListener('click', () => showPanel('signup'));
+$('go-signup').addEventListener('click',  () => showPanel('signup'));
+$('go-login').addEventListener('click',   () => showPanel('login'));
 
-async function sendRequest(url, options) {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-  const text = await response.text();
-  let parsed;
+// ── login ──────────────────────────────────────────────────────────────────
+$('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideAlert();
+  const fd = new FormData(e.currentTarget);
+  setLoading('login-submit', true);
 
   try {
-    parsed = text ? JSON.parse(text) : {};
-  } catch {
-    parsed = text;
-  }
-
-  if (!response.ok) {
-    const message = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
-    throw new Error(`HTTP ${response.status}\n${message}`);
-  }
-
-  return parsed;
-}
-
-document.getElementById('signup-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const payload = Object.fromEntries(formData.entries());
-
-  try {
-    const data = await sendRequest('/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    const data = await apiPost('/login', {
+      username_or_email: fd.get('username_or_email'),
+      password: fd.get('password'),
     });
-    writeOutput(data);
-  } catch (error) {
-    writeOutput(error.message, true);
+    localStorage.setItem('zylo_token', data.access_token);
+    localStorage.setItem('zylo_username', data.user.username);
+    window.location.replace('/chat');
+  } catch (err) {
+    showAlert(err.message);
+  } finally {
+    setLoading('login-submit', false);
   }
 });
 
-document.getElementById('login-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const payload = Object.fromEntries(formData.entries());
+// ── signup ─────────────────────────────────────────────────────────────────
+$('signup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideAlert();
+  const fd = new FormData(e.currentTarget);
+  setLoading('signup-submit', true);
 
   try {
-    const data = await sendRequest('/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    const data = await apiPost('/signup', {
+      username: fd.get('username'),
+      email: fd.get('email'),
+      password: fd.get('password'),
     });
-    writeOutput(data);
-  } catch (error) {
-    writeOutput(error.message, true);
+    showPanel('login');
+    showAlert(`✓ Account "${data.username}" created — sign in now.`, 'success');
+    e.currentTarget.reset();
+  } catch (err) {
+    showAlert(err.message);
+  } finally {
+    setLoading('signup-submit', false);
   }
 });
-
-document.getElementById('user-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const userId = formData.get('user_id');
-
-  try {
-    const data = await sendRequest(`/users/${userId}`);
-    writeOutput(data);
-    renderUserPreview(data);
-  } catch (error) {
-    writeOutput(error.message, true);
-    resetUserPreview();
-  }
-});
-
-connectChatButton.addEventListener('click', connectChat);
-disconnectChatButton.addEventListener('click', disconnectChat);
-
-chatForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const message = String(formData.get('chat_message') || '').trim();
-
-  if (!message) {
-    return;
-  }
-
-  if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
-    addChatLine('Connect to the chat first.', 'system');
-    return;
-  }
-
-  addChatLine(message, 'user');
-  chatSocket.send(message);
-  event.currentTarget.reset();
-});
-
-clearButton.addEventListener('click', () => {
-  writeOutput('Use one of the forms above to test the API.');
-  resetUserPreview();
-});
-
-addChatLine('Click Connect to start a live chat.', 'system');
-setChatStatus(false, 'Disconnected');

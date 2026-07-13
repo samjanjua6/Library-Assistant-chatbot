@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment / secrets — never commit!
+.env
+
+# Database files
+*.db
+*.sqlite3
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Pytest
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db

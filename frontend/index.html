@@ -1,116 +1,135 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple FastAPI User API</title>
-    <link rel="stylesheet" href="/frontend/styles.css" />
-  </head>
-  <body>
-    <main class="shell">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">FastAPI Endpoint Tester</p>
-          <h1>Test signup, login, and user lookup without opening /docs.</h1>
-          <p class="subtitle">A plain HTML, CSS, and JavaScript frontend for the modular FastAPI user API.</p>
-        </div>
-        <div class="status-card">
-          <span class="status-dot"></span>
-          <div>
-            <strong>Live API tester</strong>
-            <p>Uses the backend at <code>http://127.0.0.1:8000</code>.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zylo — Sign In</title>
+  <meta name="description" content="Sign in or create your Zylo account to access the AI-powered chat." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/frontend/styles.css" />
+</head>
+<body class="auth-page">
+
+  <!-- Animated background orbs -->
+  <div class="auth-bg" aria-hidden="true">
+    <div class="orb orb--1"></div>
+    <div class="orb orb--2"></div>
+    <div class="orb orb--3"></div>
+  </div>
+
+  <main class="auth-shell">
+    <div class="auth-card">
+
+      <!-- Branding -->
+      <div class="auth-logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">Zylo</span>
+      </div>
+      <p class="auth-tagline">AI-powered chat, secured with JWT.</p>
+
+      <!-- Tab switcher -->
+      <div class="auth-tabs" role="tablist" aria-label="Authentication">
+        <button id="tab-login"  class="auth-tab active" role="tab" aria-selected="true"  aria-controls="panel-login">Sign In</button>
+        <button id="tab-signup" class="auth-tab"        role="tab" aria-selected="false" aria-controls="panel-signup">Sign Up</button>
+      </div>
+
+      <!-- Alert banner -->
+      <div id="auth-alert" class="auth-alert hidden" role="alert" aria-live="polite"></div>
+
+      <!-- ── Login panel ── -->
+      <div id="panel-login" class="auth-panel" role="tabpanel" aria-labelledby="tab-login">
+        <form id="login-form" class="auth-form" novalidate>
+          <div class="field-group">
+            <label for="login-identifier">Username or email</label>
+            <input
+              id="login-identifier"
+              name="username_or_email"
+              type="text"
+              placeholder="alice or alice@example.com"
+              autocomplete="username"
+              required
+            />
           </div>
-        </div>
-      </header>
-
-      <section class="grid">
-        <article class="card">
-          <h2>Sign Up</h2>
-          <form id="signup-form" class="stack">
-            <label>
-              Username
-              <input name="username" type="text" placeholder="alice" required />
-            </label>
-            <label>
-              Email
-              <input name="email" type="email" placeholder="alice@example.com" required />
-            </label>
-            <label>
-              Password
-              <input name="password" type="password" placeholder="secret1" required />
-            </label>
-            <button type="submit">Create user</button>
-          </form>
-        </article>
-
-        <article class="card">
-          <h2>Login</h2>
-          <form id="login-form" class="stack">
-            <label>
-              Username or email
-              <input name="username_or_email" type="text" placeholder="alice or alice@example.com" required />
-            </label>
-            <label>
-              Password
-              <input name="password" type="password" placeholder="secret1" required />
-            </label>
-            <button type="submit">Login</button>
-          </form>
-        </article>
-
-        <article class="card">
-          <h2>Get User</h2>
-          <form id="user-form" class="stack">
-            <label>
-              User ID
-              <input name="user_id" type="number" min="1" placeholder="1" required />
-            </label>
-            <button type="submit">Fetch user</button>
-          </form>
-        </article>
-      </section>
-
-      <section class="card user-card">
-        <div class="output-header">
-          <h2>User Preview</h2>
-          <span class="hint">Updates when you fetch a user by id</span>
-        </div>
-        <div id="user-preview" class="user-preview empty">
-          <p>No user loaded yet. Enter a user id above and click <strong>Fetch user</strong>.</p>
-        </div>
-      </section>
-
-      <section class="card chat-card">
-        <div class="output-header">
-          <h2>Live AI Chat</h2>
-          <span class="hint">Connects to <code>/ws/chat</code></span>
-        </div>
-        <div class="chat-controls stack">
-          <div class="chat-status-row">
-            <span id="chat-status" class="chat-status offline">Disconnected</span>
-            <button id="connect-chat" type="button">Connect</button>
-            <button id="disconnect-chat" type="button" class="ghost">Disconnect</button>
+          <div class="field-group">
+            <label for="login-password">Password</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              placeholder="Your password"
+              autocomplete="current-password"
+              required
+            />
           </div>
-          <form id="chat-form" class="stack chat-form">
-            <label>
-              Message
-              <input name="chat_message" type="text" placeholder="Say hello to the bot" autocomplete="off" required />
+          <button id="login-submit" type="submit" class="btn-primary">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+          </button>
+        </form>
+        <p class="auth-switch">
+          Don't have an account?
+          <button class="link-btn" id="go-signup" type="button">Sign up free</button>
+        </p>
+      </div>
+
+      <!-- ── Signup panel ── -->
+      <div id="panel-signup" class="auth-panel hidden" role="tabpanel" aria-labelledby="tab-signup">
+        <form id="signup-form" class="auth-form" novalidate>
+          <div class="field-group">
+            <label for="signup-username">Username</label>
+            <input
+              id="signup-username"
+              name="username"
+              type="text"
+              placeholder="alice"
+              autocomplete="username"
+              required
+              minlength="3"
+              maxlength="50"
+            />
+          </div>
+          <div class="field-group">
+            <label for="signup-email">Email</label>
+            <input
+              id="signup-email"
+              name="email"
+              type="email"
+              placeholder="alice@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <div class="field-group">
+            <label for="signup-password">
+              Password
+              <span class="field-hint">min. 6 characters</span>
             </label>
-            <button type="submit">Send message</button>
-          </form>
-          <div id="chat-log" class="chat-log"></div>
-        </div>
-      </section>
+            <input
+              id="signup-password"
+              name="password"
+              type="password"
+              placeholder="Create a strong password"
+              autocomplete="new-password"
+              required
+              minlength="6"
+            />
+          </div>
+          <button id="signup-submit" type="submit" class="btn-primary">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+          </button>
+        </form>
+        <p class="auth-switch">
+          Already have an account?
+          <button class="link-btn" id="go-login" type="button">Sign in</button>
+        </p>
+      </div>
 
-      <section class="card output-card">
-        <div class="output-header">
-          <h2>Response</h2>
-          <button id="clear-output" type="button" class="ghost">Clear</button>
-        </div>
-        <pre id="output">Use one of the forms above to test the API.</pre>
-      </section>
-    </main>
+    </div>
+  </main>
 
-    <script src="/frontend/app.js"></script>
-  </body>
+  <script src="/frontend/app.js"></script>
+</body>
 </html>

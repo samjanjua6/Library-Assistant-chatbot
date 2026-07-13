@@ -1,202 +1,152 @@
-# Simple FastAPI User API
+# Zylo — FastAPI Chat
 
-A small FastAPI project with a single `users` table, basic signup/login endpoints, and a modular folder structure.
-
-It now includes a separate browser frontend in `frontend/` so you can test the endpoints without using Swagger.
-It also includes a tiny live chat WebSocket for quick AI-bot style experiments.
-
-## What It Does
-
-- Creates users with hashed passwords
-- Authenticates by username or email
-- Returns user details without exposing passwords
-- Uses SQLite for local development
+A full-stack FastAPI project featuring **JWT authentication**, a **secured WebSocket chat**, and a polished two-page browser frontend.
 
 ## Features
 
-- `POST /signup` to create a user
-- `POST /login` to authenticate and return a dummy token
-- `GET /users/{user_id}` to fetch public user info
-- Pydantic validation for request bodies
-- SQLAlchemy ORM models
-- Pytest coverage for the core API flows
+- `POST /signup` — register a new user
+- `POST /login` — authenticate and receive a signed **JWT**
+- `GET /users/me` — fetch the current user (requires Bearer token)
+- `GET /users/{user_id}` — fetch any user by ID
+- `WS /ws/chat?token=<jwt>` — authenticated WebSocket chat; rejects connections without a valid token (close code 1008)
+
+## Frontend
+
+The frontend is a **React + Tailwind CSS** SPA built with Vite, served by FastAPI from `frontend/dist/`.
+
+Key design rules enforced in the components:
+- **State separation** — only one form (Login or Signup) is ever mounted at a time
+- **Segmented pill** at the top of the card switches between the two states
+- **Accent gradient** (`indigo→violet`) is used **only** on primary CTA buttons (`SubmitButton`) — nowhere else
+- Inputs have transparent-dark backgrounds and a subtle indigo focus ring
+- Card sits on a deeper canvas (`#0c0e17`) with a lighter surface (`#13161f`)
+
+### Component tree
+
+```
+App (Router)
+├── AuthPage        — Login/Signup container + pill control
+│   ├── LoginForm   — username/password fields
+│   ├── SignupForm  — username/email/password fields
+│   ├── InputField  — reusable labeled input primitive
+│   └── SubmitButton — gradient CTA (the only accent element)
+└── ChatPage        — WebSocket orchestration
+    ├── TopBar      — brand, WS status dot, user info, logout
+    ├── MessageList — scrollable message bubbles
+    └── ChatInput   — floating input bar + send button
+```
 
 ## Project Structure
 
 ```text
-app/
-  core/
-    database.py
-    security.py
-  models/
-    __init__.py
-    user.py
-  routers/
-    __init__.py
-    auth.py
-    users.py
-  schemas/
-    __init__.py
-    auth.py
-    user.py
-  main.py
-main.py
-tests/
-  test_main.py
+.
+├── main.py                    # Uvicorn entry point
+├── requirements.txt
+├── .env.example               # Copy to .env and fill in your values
+├── .gitignore
+├── app/
+│   ├── main.py                # FastAPI app factory
+│   ├── core/
+│   │   ├── config.py          # Pydantic-settings (reads .env)
+│   │   ├── database.py        # SQLAlchemy engine + session
+│   │   ├── security.py        # Password hashing + JWT create/decode
+│   │   └── deps.py            # Reusable FastAPI dependencies
+│   ├── models/
+│   │   └── user.py            # User ORM model
+│   ├── routers/
+│   │   ├── auth.py            # /signup  /login
+│   │   ├── chat.py            # /ws/chat (auth-secured)
+│   │   └── users.py           # /users/me  /users/{id}
+│   └── schemas/
+│       ├── auth.py            # LoginRequest  TokenResponse
+│       └── user.py            # UserSignup  UserRead
+├── frontend/
+│   ├── index.html             # Login / Sign-up page
+│   ├── chat.html              # Chat page (requires JWT in localStorage)
+│   ├── styles.css             # Shared styles (Inter font, dark glass)
+│   ├── app.js                 # Auth page logic
+│   └── chat.js                # Chat page logic (WebSocket + auth guard)
+└── tests/
+    ├── test_main.py
+    └── test_websocket_chat.py
 ```
 
 ## Requirements
 
-- Python 3.14+
-- FastAPI
-- SQLAlchemy
-- Uvicorn
-- Pytest
+- Python 3.11+
+- PostgreSQL (running locally)
 
-## Setup
-
-Create and activate a virtual environment, then install dependencies:
+## Quick Start
 
 ```powershell
+# 1. Create & activate virtual environment
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
 
-## Run the App
+# 2. Install dependencies
+python -m pip install -r requirements.txt
 
-Start the API from the project root:
+# 3. Configure (optional — defaults match a local Postgres install)
+copy .env.example .env
+# Edit .env with your POSTGRES_PASSWORD, SECRET_KEY, etc.
 
-```powershell
+# 4. Start the server
 uvicorn main:app --reload
 ```
 
-Then open:
-
-- App UI: http://127.0.0.1:8000/
-- Swagger UI: http://127.0.0.1:8000/docs
-- OpenAPI JSON: http://127.0.0.1:8000/openapi.json
-
-## Browser UI
-
-The frontend lives in the top-level `frontend/` folder and stays separate from the backend code.
-
-The backend serves that frontend at the project root, so you only need the FastAPI server running.
-
 Open:
 
-- Frontend app: http://127.0.0.1:8000/
+| Page | URL |
+|---|---|
+| Login / Sign-up | http://127.0.0.1:8000/ |
+| Chat | http://127.0.0.1:8000/chat |
+| Swagger UI | http://127.0.0.1:8000/docs |
 
-The page provides three simple forms:
+## Database Configuration
 
-- Sign Up creates a user with `POST /signup`
-- Login authenticates with `POST /login`
-- Get User fetches public info with `GET /users/{user_id}`
+The app resolves the connection string in this order:
 
-Responses are printed in a readable JSON panel so you can test success and failure cases quickly.
+1. `DATABASE_URL` env var (takes priority — used by tests with SQLite)
+2. Individual `POSTGRES_*` vars (or defaults below)
 
-The frontend calls the same origin backend directly.
+Default local PostgreSQL connection:
 
-### WebSocket Chat
+| Setting | Default |
+|---|---|
+| Host | `localhost` |
+| Port | `5433` |
+| Database | `Testing` |
+| User | `postgres` |
+| Password | `12345` |
 
-The frontend also includes a tiny live chat panel that connects to `ws://127.0.0.1:8000/ws/chat`.
+## Authentication Flow
 
-It is intentionally simple:
+1. **Sign up** → `POST /signup` — creates user, returns public profile
+2. **Log in** → `POST /login` — verifies credentials, returns a signed **JWT**
+3. **Use token** → pass as `Authorization: Bearer <token>` header for REST endpoints, or as `?token=<token>` query param for WebSocket connections
+4. **JWT expires** after `ACCESS_TOKEN_EXPIRE_MINUTES` (default: 60 min). The chat page automatically redirects to login when the server closes with code 1008.
 
-- connect
-- send a message
-- receive a small bot-style reply
+## WebSocket Security
 
-This is a good starting point if you want to replace the reply logic later with a real AI model.
-
-## Endpoints
-
-### `POST /signup`
-
-Create a new user.
-
-Example request:
-
-```json
-{
-  "username": "alice",
-  "email": "alice@example.com",
-  "password": "secret1"
-}
+```
+ws://localhost:8000/ws/chat?token=<your_jwt>
 ```
 
-Example response:
+- ✅ Valid token → connection accepted, greeted by name
+- ❌ Missing / invalid token → server closes with **code 1008** (Policy Violation)
 
-```json
-{
-  "id": 1,
-  "username": "alice",
-  "email": "alice@example.com",
-  "created_at": "2026-07-10T09:50:31.719947"
-}
-```
+## Running Tests
 
-### `POST /login`
-
-Authenticate with username or email plus password.
-
-Example request:
-
-```json
-{
-  "username_or_email": "alice",
-  "password": "secret1"
-}
-```
-
-Example response:
-
-```json
-{
-  "access_token": "dummy-token-for-user-1",
-  "token_type": "bearer",
-  "user": {
-    "id": 1,
-    "username": "alice",
-    "email": "alice@example.com",
-    "created_at": "2026-07-10T09:50:31.719947"
-  }
-}
-```
-
-### `GET /users/{user_id}`
-
-Fetch a user by id.
-
-Example response:
-
-```json
-{
-  "id": 1,
-  "username": "alice",
-  "email": "alice@example.com",
-  "created_at": "2026-07-10T09:50:31.719947"
-}
-```
-
-## Testing
-
-Run the test suite with:
+Tests use SQLite in-memory — no Postgres needed.
 
 ```powershell
-pytest
+pytest -v
 ```
 
-The tests cover:
+## Generating a Secure SECRET_KEY
 
-- OpenAPI/docs availability
-- Successful signup, login, and user lookup
-- Duplicate email rejection
-- Wrong password rejection
-- WebSocket chat reply behavior
+```powershell
+.venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"
+```
 
-## Notes
-
-- Passwords are hashed before storage.
-- The project uses SQLite and creates the schema at startup.
-- The login token is intentionally dummy-only for now; real auth can be added later.
+Paste the output as `SECRET_KEY` in your `.env` file.
