@@ -149,4 +149,4 @@ pytest -v
 .venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Paste the output as `SECRET_KEY` in your `.env` file.
+Paste the output as `SECRET_KEY` in your `.env` file.# ai-chatbot
