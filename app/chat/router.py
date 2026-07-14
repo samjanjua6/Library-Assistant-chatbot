@@ -61,9 +61,14 @@ async def chat_socket(
 
             # Stream the Gemini reply token-by-token
             full_reply = ""
-            async for token_chunk in stream_reply(history, user_message, retrieved_context):
-                full_reply += token_chunk
-                await websocket.send_text(token_chunk)
+            try:
+                async for token_chunk in stream_reply(history, user_message, retrieved_context):
+                    full_reply += token_chunk
+                    await websocket.send_text(token_chunk)
+            except Exception as e:
+                err_msg = f"\n\n[System Error: Failed to generate response from Gemini. It might be a quota limit (429) or invalid API key. Details: {str(e)}]"
+                full_reply += err_msg
+                await websocket.send_text(err_msg)
 
             # Signal to the client that streaming is complete
             await websocket.send_text("[DONE]")

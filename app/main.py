@@ -9,9 +9,9 @@ from fastapi.staticfiles import StaticFiles
 
 from .core.database import Base, engine
 from .users.model import User  # noqa: F401 — registers User table with SQLAlchemy metadata
-from .auth import router as auth_router
-from .chat import router as chat_router
-from .users import router as users_router
+from .auth.router import router as auth_router
+from .chat.router import router as chat_router
+from .users.router import router as users_router
 
 
 Base.metadata.create_all(bind=engine)

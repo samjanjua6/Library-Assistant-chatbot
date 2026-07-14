@@ -58,7 +58,7 @@ async def stream_reply(
         )
     ]
 
-    async for chunk in client.aio.models.generate_content_stream(
+    response_stream = await client.aio.models.generate_content_stream(
         model="gemini-2.0-flash",
         contents=contents,
         config=types.GenerateContentConfig(
@@ -66,6 +66,7 @@ async def stream_reply(
             temperature=0.7,
             max_output_tokens=2048,
         ),
-    ):
+    )
+    async for chunk in response_stream:
         if chunk.text:
             yield chunk.text
