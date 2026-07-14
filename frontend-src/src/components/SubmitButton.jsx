@@ -13,8 +13,8 @@ export default function SubmitButton({ children, loading }) {
       disabled={loading}
       className="w-full mt-2 py-3 rounded-xl text-[0.93rem] font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
-        background:  'linear-gradient(135deg, #6366f1, #8b5cf6)',
-        boxShadow:   '0 4px 20px rgba(99,102,241,0.35)',
+        background:  'linear-gradient(135deg, #3498DB, #2980B9)',
+        boxShadow:   '0 4px 20px rgba(52, 152, 219, 0.35)',
       }}
     >
       {loading ? (

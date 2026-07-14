@@ -4,50 +4,50 @@
 
 /* ─── Theme token definitions ──────────────────────────────────────────────── */
 
-/* Dark (default) */
+/* Light (default) */
 :root {
-  --canvas:       #080b14;
-  --mesh-a:       rgba(79, 70, 229, 0.22);
-  --mesh-b:       rgba(139, 92, 246, 0.15);
-  --mesh-c:       rgba(59, 130, 246, 0.10);
+  --canvas:       #FFFFFF;
+  --mesh-a:       rgba(52, 152, 219, 0.15); /* Sky Blue #3498DB */
+  --mesh-b:       rgba(241, 196, 15, 0.10); /* Sunshine Yellow #F1C40F */
+  --mesh-c:       rgba(52, 73, 94, 0.08);   /* Dark Blue-Gray #34495E */
 
-  --glass-bg:     rgba(255, 255, 255, 0.05);
-  --glass-hi:     rgba(255, 255, 255, 0.09);
-  --glass-input:  rgba(0,   0,   0,   0.28);
+  --glass-bg:     rgba(255, 255, 255, 0.70);
+  --glass-hi:     rgba(255, 255, 255, 0.90);
+  --glass-input:  rgba(52, 73, 94, 0.04);
 
-  --border:       rgba(255, 255, 255, 0.10);
-  --border-s:     rgba(255, 255, 255, 0.06);
+  --border:       rgba(52, 73, 94, 0.12);
+  --border-s:     rgba(52, 73, 94, 0.06);
 
-  --text-1:       rgba(255, 255, 255, 0.93);
-  --text-2:       rgba(255, 255, 255, 0.50);
-  --text-3:       rgba(255, 255, 255, 0.25);
+  --text-1:       #34495E;
+  --text-2:       rgba(52, 73, 94, 0.70);
+  --text-3:       rgba(52, 73, 94, 0.40);
 
-  --shadow:       0 8px 32px rgba(0, 0, 0, 0.55);
+  --shadow:       0 8px 32px rgba(52, 152, 219, 0.08);
 
-  --pill-active:  rgba(255, 255, 255, 0.12);
+  --pill-active:  rgba(52, 152, 219, 0.12);
 }
 
-/* Light */
-[data-theme="light"] {
-  --canvas:       #eef2ff;
-  --mesh-a:       rgba(99,  102, 241, 0.22);
-  --mesh-b:       rgba(167, 139, 250, 0.20);
-  --mesh-c:       rgba(96,  165, 250, 0.15);
+/* Dark (alternative) */
+[data-theme="dark"] {
+  --canvas:       #1A252F; /* Dark blue-gray base */
+  --mesh-a:       rgba(52, 152, 219, 0.20);
+  --mesh-b:       rgba(241, 196, 15, 0.12);
+  --mesh-c:       rgba(52, 73, 94, 0.15);
 
-  --glass-bg:     rgba(255, 255, 255, 0.60);
-  --glass-hi:     rgba(255, 255, 255, 0.85);
-  --glass-input:  rgba(255, 255, 255, 0.50);
+  --glass-bg:     rgba(26, 37, 47, 0.50);
+  --glass-hi:     rgba(26, 37, 47, 0.80);
+  --glass-input:  rgba(0, 0, 0, 0.25);
 
-  --border:       rgba(0,   0,   0,   0.09);
-  --border-s:     rgba(0,   0,   0,   0.05);
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-s:     rgba(255, 255, 255, 0.04);
 
-  --text-1:       rgba(15,  15,  40,  0.93);
-  --text-2:       rgba(15,  15,  40,  0.52);
-  --text-3:       rgba(15,  15,  40,  0.30);
+  --text-1:       rgba(255, 255, 255, 0.95);
+  --text-2:       rgba(255, 255, 255, 0.60);
+  --text-3:       rgba(255, 255, 255, 0.35);
 
-  --shadow:       0 8px 32px rgba(99, 102, 241, 0.15);
+  --shadow:       0 8px 32px rgba(0, 0, 0, 0.30);
 
-  --pill-active:  rgba(99,  102, 241, 0.12);
+  --pill-active:  rgba(52, 152, 219, 0.20);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */

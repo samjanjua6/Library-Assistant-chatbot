@@ -59,7 +59,7 @@ export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, 
 
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0 uppercase"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+          style={{ background: 'linear-gradient(135deg, #3498DB, #2980B9)' }}
           aria-hidden
         >
           {initial}

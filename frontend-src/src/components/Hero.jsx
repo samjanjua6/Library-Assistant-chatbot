@@ -72,7 +72,7 @@ export default function Hero() {
               whileHover={{ scale: 1.02, opacity: 0.92 }}
               whileTap={{ scale: 0.98 }}
               className="group flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 20px rgba(99,102,241,0.35)' }}
+              style={{ background: 'linear-gradient(135deg, #3498DB, #2980B9)', boxShadow: '0 4px 20px rgba(52, 152, 219, 0.35)' }}
             >
               Start Chatting
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

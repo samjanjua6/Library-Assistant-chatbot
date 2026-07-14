@@ -48,8 +48,8 @@ export default function ThemeToggle() {
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
         className="absolute w-5 h-5 rounded-full flex items-center justify-center text-white"
         style={{
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-          boxShadow: '0 2px 8px rgba(99,102,241,0.5)',
+          background: 'linear-gradient(135deg, #3498DB, #2980B9)',
+          boxShadow: '0 2px 8px rgba(52, 152, 219, 0.5)',
         }}
       >
         <motion.span

@@ -79,7 +79,7 @@ function Message({ msg, username }) {
         className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 font-semibold"
         style={
           isUser
-            ? { background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }
+            ? { background: 'linear-gradient(135deg,#3498DB,#2980B9)', color: '#fff' }
             : { background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-1)', fontSize: '1rem' }
         }
         aria-hidden
@@ -93,8 +93,8 @@ function Message({ msg, username }) {
         style={
           isUser
             ? {
-                background:  'rgba(99,102,241,0.18)',
-                border:      '1px solid rgba(99,102,241,0.25)',
+                background:  'rgba(52,152,219,0.18)',
+                border:      '1px solid rgba(52,152,219,0.25)',
                 color:       'var(--text-1)',
                 borderBottomRightRadius: '4px',
               }

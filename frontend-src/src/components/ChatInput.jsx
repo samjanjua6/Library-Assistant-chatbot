@@ -35,7 +35,7 @@ export default function ChatInput({ onSend, disabled, isStreaming }) {
           border:      '1px solid var(--border)',
           backdropFilter: 'blur(16px)',
         }}
-        onFocusCapture={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.45)'}
+        onFocusCapture={e => e.currentTarget.style.borderColor = 'rgba(52,152,219,0.45)'}
         onBlurCapture={e =>  e.currentTarget.style.borderColor = 'var(--border)'}
       >
         <input
@@ -55,7 +55,7 @@ export default function ChatInput({ onSend, disabled, isStreaming }) {
           disabled={isLocked}
           aria-label="Send message"
           className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 transition-all duration-150 hover:opacity-85 hover:scale-105 active:scale-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', boxShadow: '0 2px 12px rgba(99,102,241,0.4)' }}
+          style={{ background: 'linear-gradient(135deg,#3498DB,#2980B9)', boxShadow: '0 2px 12px rgba(52,152,219,0.4)' }}
         >
           <SendIcon />
         </button>
