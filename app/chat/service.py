@@ -67,3 +67,23 @@ async def stream_reply(
         content = chunk.choices[0].delta.content
         if content:
             yield content
+
+async def generate_chat_title(prompt: str) -> str:
+    """Generate a short 3-5 word title for a new chat session based on the first prompt."""
+    client = _client()
+    try:
+        response = await client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that generates extremely short titles (2-5 words max) for a conversation based on the user's first message. Do NOT use quotes around the title. Do NOT add any preamble. Just output the short title."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=15,
+            stream=False,
+        )
+        title = response.choices[0].message.content.strip().strip('"').strip("'")
+        return title[:100]  # Ensure it fits in the DB column
+    except Exception:
+        # Fallback if title generation fails
+        return prompt[:30] + ("..." if len(prompt) > 30 else "")

@@ -8,7 +8,7 @@ from ..core.database import get_db
 from ..core.deps import get_current_user_ws, get_current_user
 from ..users.model import User
 from .model import ChatSession, ChatMessage
-from .service import stream_reply
+from .service import stream_reply, generate_chat_title
 
 
 router = APIRouter(tags=["Chat"])
@@ -109,7 +109,7 @@ async def chat_socket(
 
             # If no active session, create one dynamically upon first user prompt
             if not chat_session:
-                title = user_message[:30] + ("..." if len(user_message) > 30 else "")
+                title = await generate_chat_title(user_message)
                 chat_session = ChatSession(user_id=user.id, title=title)
                 db.add(chat_session)
                 db.commit()
@@ -117,7 +117,7 @@ async def chat_socket(
                 # Inform the frontend to update its active session
                 await websocket.send_text(f"[SESSION_ID:{chat_session.id}]")
             elif chat_session.title == "New Chat":
-                chat_session.title = user_message[:30] + ("..." if len(user_message) > 30 else "")
+                chat_session.title = await generate_chat_title(user_message)
                 db.commit()
                 db.refresh(chat_session)
                 # Send ID again to trigger a sidebar refresh on the frontend
