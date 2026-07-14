@@ -79,7 +79,7 @@ export default function Hero() {
             </motion.button>
           </Link>
 
-          <a href="https://github.com" target="_blank" rel="noreferrer">
+          <a href="https://github.com/samjanjua6/zylo-fast-api/tree/main" target="_blank" rel="noreferrer">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
