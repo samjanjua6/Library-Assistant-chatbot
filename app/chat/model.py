@@ -17,7 +17,11 @@ class ChatSession(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
-    
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_message_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     # Optional relationship if needed
     # messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
 
