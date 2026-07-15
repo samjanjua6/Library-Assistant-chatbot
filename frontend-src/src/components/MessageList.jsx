@@ -10,11 +10,11 @@ function formatMessageText(text) {
     let cleanLine = line.trim();
     let isBullet = false;
     
-    // Check for bullet point (* or -)
-    if (cleanLine.startsWith('*') || cleanLine.startsWith('-')) {
+    // Check for bullet point (* or -) followed by a space
+    if (/^[*+-]\s+/.test(cleanLine)) {
       isBullet = true;
       // Remove the bullet prefix
-      cleanLine = cleanLine.replace(/^[*+-]\s*/, '');
+      cleanLine = cleanLine.replace(/^[*+-]\s+/, '');
     }
     
     // Parse bold text (**text**)
@@ -23,6 +23,18 @@ function formatMessageText(text) {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={pIdx} className="font-bold">{part.slice(2, -2)}</strong>;
       }
+      
+      // Parse italic text (*text* or _text_)
+      const italicParts = part.split(/(\*[^*_]+\*|_[^*_]+_)/g);
+      if (italicParts.length > 1) {
+        return <span key={pIdx}>{italicParts.map((iPart, iIdx) => {
+          if ((iPart.startsWith('*') && iPart.endsWith('*')) || (iPart.startsWith('_') && iPart.endsWith('_'))) {
+            return <em key={iIdx} className="italic">{iPart.slice(1, -1)}</em>;
+          }
+          return iPart;
+        })}</span>;
+      }
+
       return part;
     });
 
@@ -47,9 +59,9 @@ function BotIntro() {
   return (
     <div className="flex flex-col items-center justify-center flex-1 text-center py-16 gap-4">
       <div className="text-5xl leading-none" aria-hidden>🤖</div>
-      <h1 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>Zylo English Learning AI</h1>
+      <h1 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>Zylo Library Assistant</h1>
       <p className="text-sm max-w-xs" style={{ color: 'var(--text-2)' }}>
-        Your personal English language tutor is ready. Send a message to start practicing.
+        Your personal library assistant is ready. Send a message to search for books, check availability, or manage loans.
       </p>
     </div>
   )
@@ -147,12 +159,12 @@ function Message({ msg, username }) {
   )
 }
 
-export default function MessageList({ messages, username }) {
+export default function MessageList({ messages, username, toolStatus }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, toolStatus])
 
   return (
     <main
@@ -164,6 +176,34 @@ export default function MessageList({ messages, username }) {
       {messages.length === 0 ? <BotIntro /> : messages.map(msg => (
         <Message key={msg.id} msg={msg} username={username} />
       ))}
+      {toolStatus && (
+        <div className="flex items-end gap-2.5">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 font-semibold"
+            style={{ background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-1)', fontSize: '1rem' }}
+            aria-hidden
+          >
+            🤖
+          </div>
+          <div
+            className="max-w-[70%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed space-y-1 flex items-center gap-3"
+            style={{
+                background:  'var(--glass-bg)',
+                backdropFilter: 'blur(12px)',
+                border:      '1px solid var(--border)',
+                color:       'var(--text-1)',
+                borderBottomLeftRadius: '4px',
+            }}
+          >
+            <div className="flex gap-1 items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            </div>
+            <span className="italic" style={{ color: 'var(--text-2)' }}>{toolStatus}</span>
+          </div>
+        </div>
+      )}
       <div ref={bottomRef} />
     </main>
   )

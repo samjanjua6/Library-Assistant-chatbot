@@ -33,9 +33,10 @@ function useWebSocket(token, sessionId, onChunk, onStatusChange, skipReconnectRe
     const ws = new WebSocket(url)
     wsRef.current = ws
 
-    ws.onopen    = () => onStatusChange('online')
-    ws.onmessage = (e) => onChunk(e.data)
+    ws.onopen    = () => { if (wsRef.current === ws) onStatusChange('online') }
+    ws.onmessage = (e) => { if (wsRef.current === ws) onChunk(e.data) }
     ws.onclose   = (e) => {
+      if (wsRef.current !== ws) return
       onStatusChange('offline')
       if (e.code === 1008) {
         onStatusChange('expired')
@@ -43,7 +44,7 @@ function useWebSocket(token, sessionId, onChunk, onStatusChange, skipReconnectRe
         reconnectTimer.current = setTimeout(connect, 3000)
       }
     }
-    ws.onerror = () => onStatusChange('error')
+    ws.onerror = () => { if (wsRef.current === ws) onStatusChange('error') }
   }, [token, sessionId, onChunk, onStatusChange, skipReconnectRef])
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function ChatPage() {
   const [messages, setMessages]     = useState([])
   const [wsStatus, setWsStatus]     = useState('offline')
   const [isStreaming, setIsStreaming] = useState(false)
+  const [toolStatus, setToolStatus] = useState('')
   const [sessions, setSessions] = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
   const skipWsReconnectRef = useRef(false)
@@ -233,15 +235,22 @@ export default function ChatPage() {
       }
       return
     }
+    if (data.startsWith('[STATUS:')) {
+      const statusMsg = data.replace('[STATUS:', '').replace(/\]$/, '')
+      setToolStatus(statusMsg)
+      return
+    }
     // First non-DONE message after quiet period → start a new bubble
     if (data === DONE_SENTINEL) {
       finishBotStream()
       streamingRef.current = false
+      setToolStatus('')
       return
     }
     if (!streamingRef.current) {
       startBotStream()
       streamingRef.current = true
+      setToolStatus('')
     }
     appendToLastBot(data)
   }, [startBotStream, appendToLastBot, finishBotStream, fetchSessions])
@@ -263,6 +272,7 @@ export default function ChatPage() {
   function handleSend(text) {
     if (!text.trim() || wsStatus !== 'online' || isStreaming) return
     streamingRef.current = false
+    setToolStatus('')
     addMessage(text, 'user')
     send(text)
   }
@@ -313,7 +323,7 @@ export default function ChatPage() {
           isOpen={showSidebar}
         />
         <div className="flex flex-col flex-1 min-w-0">
-          <MessageList messages={messages} username={username} />
+          <MessageList messages={messages} username={username} toolStatus={toolStatus} />
           <ChatInput onSend={handleSend} disabled={wsStatus !== 'online'} isStreaming={isStreaming} />
         </div>
       </div>

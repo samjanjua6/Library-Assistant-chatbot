@@ -49,10 +49,10 @@ export default function Hero() {
           className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 leading-[1.05]"
           style={{ color: 'var(--text-1)' }}
         >
-          Master English with{' '}
+          Manage your books with{' '}
           <br />
           <span className="bg-gradient-to-br from-indigo-400 via-violet-400 to-violet-500 bg-clip-text text-transparent">
-            Zylo Learning AI.
+            Zylo Library AI.
           </span>
         </motion.h1>
 
@@ -62,7 +62,7 @@ export default function Hero() {
           className="text-lg md:text-xl max-w-2xl mb-12 font-light leading-relaxed"
           style={{ color: 'var(--text-2)' }}
         >
-          Your personal, patient, and highly encouraging English Language Tutor. Improve your grammar, fluency, and vocabulary through natural conversation and structured feedback.
+          Your personal Library Book Assistant. Search the catalog, check availability, borrow, and return books seamlessly through natural conversation.
         </motion.p>
 
         {/* CTAs */}

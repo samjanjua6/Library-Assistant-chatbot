@@ -114,7 +114,7 @@ async def chat_socket(
     # Send welcome message only if it's a completely new chat with no history
     if not history:
         await websocket.send_text(
-            f"Hello **{user.username}**! I am your English Language Tutor. I am excited to help you practice and improve your English. Let's start chatting! How was your day?"
+            f"Hello **{user.username}**! I am your Library Book Assistant. 📚 I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?"
         )
         await websocket.send_text("[DONE]")
 
@@ -151,8 +151,8 @@ async def chat_socket(
             # Stream the Groq reply token-by-token
             full_reply = ""
             try:
-                async for token_chunk in stream_reply(history, user_message, retrieved_context):
-                    if token_chunk.startswith("[USAGE:"):
+                async for token_chunk in stream_reply(history, user_message, user.id, retrieved_context):
+                    if token_chunk.startswith("[USAGE:") or token_chunk.startswith("[STATUS:"):
                         await websocket.send_text(token_chunk)
                         continue
                     full_reply += token_chunk
