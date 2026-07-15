@@ -5,7 +5,8 @@ import ChatPage from './pages/ChatPage'
 
 /** Guard: redirect unauthenticated users to /login */
 function PrivateRoute({ children }) {
-  return localStorage.getItem('zylo_token') ? children : <Navigate to="/login" replace />
+  const hasToken = localStorage.getItem('zylo_token') || new URLSearchParams(window.location.search).has('token')
+  return hasToken ? children : <Navigate to="/login" replace />
 }
 
 export default function App() {
