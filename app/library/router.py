@@ -1,9 +1,10 @@
 from __future__ import annotations
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_current_admin_user
@@ -64,10 +65,30 @@ def api_return_book(book_id: int, user: User = Depends(get_current_user)):
 # --- Admin Endpoints ---
 
 @router.get("/api/library/admin/books")
-def admin_get_books(db: Session = Depends(get_db), admin: User = Depends(get_current_admin_user)):
-    """Get all books."""
-    books = db.query(Book).order_by(Book.id.desc()).all()
-    return books
+def admin_get_books(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db), 
+    admin: User = Depends(get_current_admin_user)
+):
+    """Get all books with pagination and search."""
+    query = db.query(Book)
+    if search:
+        query = query.filter(
+            or_(
+                Book.title.ilike(f"%{search}%"),
+                Book.author.ilike(f"%{search}%")
+            )
+        )
+    
+    total = query.count()
+    books = query.order_by(Book.id.desc()).offset(skip).limit(limit).all()
+    
+    return {
+        "books": books,
+        "total": total
+    }
 
 
 @router.post("/api/library/admin/books")

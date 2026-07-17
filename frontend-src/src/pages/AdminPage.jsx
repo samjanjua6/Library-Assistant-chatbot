@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 
 export default function AdminPage() {
   const [books, setBooks] = useState([])
+  const [totalBooks, setTotalBooks] = useState(0)
+  const [page, setPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
   const [loans, setLoans] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,8 +25,12 @@ export default function AdminPage() {
       const token = localStorage.getItem('zylo_token')
       const headers = { Authorization: `Bearer ${token}` }
       
+      const skip = (page - 1) * 10
+      const limit = 10
+      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''
+      
       const [booksRes, loansRes, usersRes] = await Promise.all([
-        fetch('/api/library/admin/books', { headers }),
+        fetch(`/api/library/admin/books?skip=${skip}&limit=${limit}${searchParam}`, { headers }),
         fetch('/api/library/admin/loans', { headers }),
         fetch('/api/admin/users', { headers })
       ])
@@ -40,7 +47,9 @@ export default function AdminPage() {
         throw new Error('FORBIDDEN') // Treat any unexpected error (like 404) as forbidden just to be safe on the admin page, or generic error.
       }
         
-      setBooks(await booksRes.json())
+      const booksData = await booksRes.json()
+      setBooks(booksData.books)
+      setTotalBooks(booksData.total)
       setLoans(await loansRes.json())
       setUsers(await usersRes.json())
     } catch (err) {
@@ -52,7 +61,16 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [page])
+
+  // Debounce search query changes
+  useEffect(() => {
+    setPage(1) // Reset to first page on new search
+    const timer = setTimeout(() => {
+      fetchData()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const handleAddBook = async (e) => {
     e.preventDefault()
@@ -184,14 +202,23 @@ export default function AdminPage() {
           </section>
 
           {/* Book Catalog Section */}
-          <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex-1 overflow-hidden flex flex-col">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              Book Catalog Inventory
-            </h2>
-            <div className="overflow-x-auto flex-1">
+          <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex-1 flex flex-col">
+            <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <svg className="w-5 h-5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Book Catalog Inventory
+              </h2>
+              <input 
+                type="text" 
+                placeholder="Search title or author..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-4 py-2 focus:outline-none focus:border-sky-500 transition-colors max-w-xs w-full"
+              />
+            </div>
+            <div className="overflow-x-auto flex-1 mb-4">
               {loading ? (
                 <div className="flex justify-center py-10"><span className="animate-pulse">Loading data...</span></div>
               ) : error ? (
@@ -236,6 +263,29 @@ export default function AdminPage() {
                 </table>
               )}
             </div>
+            
+            {/* Pagination Controls */}
+            {!loading && totalBooks > 0 && (
+              <div className="flex justify-between items-center mt-auto pt-4 border-t border-[var(--border)]">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg bg-[var(--glass-hi)] border border-[var(--border)] disabled:opacity-50 hover:bg-[var(--border)] transition-colors text-sm font-medium"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-[var(--text-2)]">
+                  Page {page} of {Math.ceil(totalBooks / 10)} ({totalBooks} books total)
+                </span>
+                <button 
+                  onClick={() => setPage(p => Math.min(Math.ceil(totalBooks / 10), p + 1))}
+                  disabled={page >= Math.ceil(totalBooks / 10)}
+                  className="px-4 py-2 rounded-lg bg-[var(--glass-hi)] border border-[var(--border)] disabled:opacity-50 hover:bg-[var(--border)] transition-colors text-sm font-medium"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Manage Users Section */}
