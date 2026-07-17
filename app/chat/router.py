@@ -176,3 +176,8 @@ async def chat_socket(
 
     except WebSocketDisconnect:
         return
+    except Exception as exc:
+        import traceback
+        with open("/app/data/crash.log", "a") as f:
+            f.write(f"CRASH: {exc}\n{traceback.format_exc()}\n")
+        raise

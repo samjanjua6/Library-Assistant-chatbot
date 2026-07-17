@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ~/library-data:/app/data
+      - /home/shaheer/library-data:/app/data
 
   caddy:
     image: caddy:latest
