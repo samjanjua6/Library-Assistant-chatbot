@@ -22,7 +22,7 @@ from ..library.rag import search_knowledge_base
 
 def _client() -> AsyncOpenAI:
     """Return a configured async Groq client."""
-    return AsyncOpenAI(api_key=settings.GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
+    return AsyncOpenAI(api_key=settings.GROQ_API_KEY, base_url="https://api.cerebras.ai/v1")
 
 
 async def call_with_retry(func, *args, max_retries=3, initial_delay=1.0, backoff_factor=2.0, **kwargs):
@@ -223,7 +223,7 @@ async def stream_reply(
         try:
             stream = await call_with_retry(
                 client.chat.completions.create,
-                model="llama-3.1-8b-instant",
+                model="gemma-4-31b",
                 messages=messages,
                 tools=TOOLS,
                 tool_choice="auto",
