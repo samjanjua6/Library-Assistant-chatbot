@@ -39,7 +39,6 @@ jobs:
         port: 22
         source: "deploy.zip"
         target: "~/"
-        rm: true
 
     - name: Execute Deployment Commands via SSH
       uses: appleboy/ssh-action@v1.0.3
