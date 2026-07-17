@@ -1,0 +1,3 @@
+mychatbot.codes {
+    reverse_proxy web:80
+}
