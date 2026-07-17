@@ -5,6 +5,7 @@ import random
 import json
 from typing import AsyncGenerator, Dict, Any
 
+# pyrefly: ignore [missing-import]
 from openai import AsyncOpenAI, RateLimitError, APITimeoutError, APIConnectionError, APIError
 
 from ..core.config import settings
@@ -16,6 +17,7 @@ from ..library.service import (
     return_book, ReturnBookArgs,
     get_my_borrowed_books, GetBorrowedBooksArgs
 )
+from ..library.rag import search_knowledge_base
 
 
 def _client() -> AsyncOpenAI:
@@ -145,6 +147,23 @@ TOOLS = [
                 "properties": {}
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_knowledge_base",
+            "description": "Search the library's internal knowledge base for information about policies, rules, hours, late fees, amenities, and general non-catalog questions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query, formatted as a natural language question or keyword string."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
     }
 ]
 
@@ -164,6 +183,8 @@ def execute_tool(name: str, args_json: str, user_id: int) -> str:
             return return_book(ReturnBookArgs(user_id=user_id, book_id=args.get("book_id")))
         elif name == "get_my_borrowed_books":
             return get_my_borrowed_books(GetBorrowedBooksArgs(user_id=user_id))
+        elif name == "search_knowledge_base":
+            return search_knowledge_base(args.get("query", ""))
         else:
             return json.dumps({"status": "error", "message": f"Unknown tool: {name}"})
     except Exception as e:
@@ -295,6 +316,8 @@ async def stream_reply(
                     yield "[STATUS:Checking book availability...]"
                 elif name == "get_my_borrowed_books":
                     yield "[STATUS:Checking your active loans...]"
+                elif name == "search_knowledge_base":
+                    yield "[STATUS:Searching the knowledge base...]"
                 else:
                     yield f"[STATUS:Executing {name}...]"
                 

@@ -18,7 +18,7 @@ def _build_database_url() -> "str | URL":
     # Return the URL object directly — do NOT call str() on it.
     # str(URL) masks the password as '***', causing auth failures.
     return URL.create(
-        "postgresql+psycopg",
+        "postgresql+pg8000",
         username=settings.POSTGRES_USER,
         password=settings.POSTGRES_PASSWORD,
         host=settings.POSTGRES_HOST,

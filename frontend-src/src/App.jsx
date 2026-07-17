@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import ChatPage from './pages/ChatPage'
+import DashboardPage from './pages/DashboardPage'
+import AdminPage from './pages/AdminPage'
 
 /** Guard: redirect unauthenticated users to /login */
 function PrivateRoute({ children }) {
@@ -25,6 +27,22 @@ export default function App() {
           element={
             <PrivateRoute>
               <ChatPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DashboardPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <AdminPage />
             </PrivateRoute>
           }
         />

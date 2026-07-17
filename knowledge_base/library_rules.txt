@@ -1,0 +1,14 @@
+# Library Rules and Policies
+
+## Borrowing Limits
+- Each user is permitted to borrow a maximum of 3 books at any given time.
+- Books can be borrowed for a maximum period of 14 days.
+
+## Late Fees
+- Late fees are applied automatically for any book that is not returned by the due date.
+- The standard late fee is $0.50 per day for each overdue book.
+- If a book is more than 30 days overdue, it will be considered "Lost".
+
+## Lost or Damaged Books
+- If a book is deemed Lost, the user's account will be billed for the full replacement cost of the book, plus a $10.00 administrative fee.
+- Books returned with severe water damage, torn pages, or missing covers will be subject to a replacement fee at the discretion of the librarian.

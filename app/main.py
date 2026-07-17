@@ -15,6 +15,7 @@ from .auth.router import router as auth_router
 from .auth.google import router as google_router
 from .chat.router import router as chat_router
 from .users.router import router as users_router
+from .library.router import router as library_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -29,6 +30,7 @@ app.include_router(auth_router)
 app.include_router(google_router)
 app.include_router(chat_router)
 app.include_router(users_router)
+app.include_router(library_router)
 
 # ── Static files ───────────────────────────────────────────────────────────────
 # The React + Vite SPA builds to frontend/dist/.
@@ -74,4 +76,16 @@ def login_page():
 @app.get("/chat", include_in_schema=False)
 def chat_page():
     """Chat page (React SPA — auth guard runs in the browser)."""
+    return _spa()
+
+
+@app.get("/dashboard", include_in_schema=False)
+def dashboard_page():
+    """Dashboard page (React SPA)."""
+    return _spa()
+
+
+@app.get("/admin", include_in_schema=False)
+def admin_page():
+    """Admin page (React SPA)."""
     return _spa()

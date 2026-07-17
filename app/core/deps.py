@@ -48,3 +48,13 @@ def get_current_user_ws(token: str | None, db: Session) -> User | None:
     if user_id is None:
         return None
     return db.get(User, int(user_id))
+
+
+def get_current_admin_user(user: User = Depends(get_current_user)) -> User:
+    """Dependency to ensure the current user is an administrator."""
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return user

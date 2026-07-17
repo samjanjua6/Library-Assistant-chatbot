@@ -29,3 +29,12 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Deployment
+deploy.zip
+
+# Node
+node_modules/
+
+# Vector DB
+chroma_db/
