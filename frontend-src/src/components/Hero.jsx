@@ -39,7 +39,7 @@ export default function Hero() {
         >
           <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-medium tracking-wide uppercase" style={{ color: 'var(--text-2)' }}>
-            Zylo v2.0 is live
+            Zylo v2.1 with CI/CD is LIVE! 🚀
           </span>
         </motion.div>
 
