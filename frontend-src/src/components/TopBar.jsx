@@ -15,7 +15,7 @@ const SidebarIcon = () => (
   </svg>
 )
 
-export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, isSidebarOpen }) {
+export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, isSidebarOpen, onDashboard }) {
   const { dot, label } = STATUS_CONFIG[wsStatus] ?? STATUS_CONFIG.offline
   const initial = username.charAt(0).toUpperCase()
 
@@ -55,6 +55,14 @@ export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, 
 
       {/* Theme toggle + user */}
       <div className="flex items-center gap-3 ml-4">
+        {onDashboard && (
+          <button 
+            onClick={onDashboard}
+            className="text-sm font-medium text-[var(--text-2)] hover:text-indigo-400 transition-colors hidden sm:block mr-2"
+          >
+            Dashboard
+          </button>
+        )}
         <ThemeToggle />
 
         <div

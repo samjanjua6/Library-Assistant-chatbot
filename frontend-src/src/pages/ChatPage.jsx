@@ -309,6 +309,7 @@ export default function ChatPage() {
         onLogout={handleLogout} 
         onToggleSidebar={() => setShowSidebar(!showSidebar)}
         isSidebarOpen={showSidebar}
+        onDashboard={() => navigate('/dashboard')}
       />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
