@@ -50,7 +50,8 @@ jobs:
         script: |
           unzip -o ~/deploy.zip -d ~/library-app
           cd ~/library-app
-          echo "DATABASE_URL=sqlite:///./data/app.db" > .env
+          touch .env
+          if ! grep -q "DATABASE_URL=" .env; then echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; else sed -i 's|DATABASE_URL=.*|DATABASE_URL=sqlite:///./data/app.db|g' .env; fi
           sudo docker build -t library-app .
           sudo docker stop library-container || true
           sudo docker rm library-container || true
