@@ -50,8 +50,8 @@ jobs:
         script: |
           unzip -o ~/deploy.zip -d ~/library-app
           cd ~/library-app
-          echo "DATABASE_URL=sqlite:///./app.db" > .env
+          echo "DATABASE_URL=sqlite:///./data/app.db" > .env
           sudo docker build -t library-app .
           sudo docker stop library-container || true
           sudo docker rm library-container || true
-          sudo docker run -d -p 80:80 --env-file .env --name library-container library-app
+          sudo docker run -d -p 80:80 -v ~/library-data:/app/data --env-file .env --name library-container library-app

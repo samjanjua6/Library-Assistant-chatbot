@@ -7,7 +7,9 @@ from pathlib import Path
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 KNOWLEDGE_BASE_DIR = BASE_DIR / "knowledge_base"
-CHROMA_DB_DIR = BASE_DIR / "chroma_db"
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+CHROMA_DB_DIR = DATA_DIR / "chroma_db"
 
 # Initialize ChromaDB persistent client
 chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
