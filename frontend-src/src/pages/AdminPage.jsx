@@ -18,6 +18,12 @@ export default function AdminPage() {
   const [newGenre, setNewGenre] = useState('')
   const [newTotalCopies, setNewTotalCopies] = useState(1)
 
+  // Knowledge Base state
+  const [kbFile, setKbFile] = useState(null)
+  const [chunkSize, setChunkSize] = useState(1000)
+  const [chunkOverlap, setChunkOverlap] = useState(200)
+  const [kbLoading, setKbLoading] = useState(false)
+
   const fetchData = async () => {
     setLoading(true)
     setError('')
@@ -139,6 +145,53 @@ export default function AdminPage() {
   const handleLogout = () => {
     localStorage.removeItem('zylo_token')
     navigate('/login')
+  }
+
+  const handleUploadKB = async (e) => {
+    e.preventDefault()
+    if (!kbFile) return alert('Please select a .txt file first')
+    setKbLoading(true)
+    try {
+      const token = localStorage.getItem('zylo_token')
+      const formData = new FormData()
+      formData.append('file', kbFile)
+      formData.append('chunk_size', chunkSize)
+      formData.append('chunk_overlap', chunkOverlap)
+      
+      const res = await fetch('/api/library/admin/knowledge-base/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Failed to upload knowledge base')
+      alert(data.message)
+      setKbFile(null)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setKbLoading(false)
+    }
+  }
+
+  const handleClearKB = async () => {
+    if (!window.confirm("Are you sure you want to clear the entire knowledge base? This action cannot be undone.")) return
+    
+    setKbLoading(true)
+    try {
+      const token = localStorage.getItem('zylo_token')
+      const res = await fetch('/api/library/admin/knowledge-base', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Failed to clear knowledge base')
+      alert(data.message)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setKbLoading(false)
+    }
   }
 
   if (error === 'FORBIDDEN') {
@@ -286,6 +339,42 @@ export default function AdminPage() {
                 </button>
               </div>
             )}
+          </section>
+
+          {/* Knowledge Base Section */}
+          <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-fuchsia-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              Knowledge Base Management
+            </h2>
+            <form onSubmit={handleUploadKB} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="md:col-span-2">
+                <input 
+                  type="file" 
+                  accept=".txt,.pdf"
+                  onChange={e => setKbFile(e.target.files[0])} 
+                  className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-500/10 file:text-sky-400 hover:file:bg-sky-500/20"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-[var(--text-2)]">Chunk Size (chars):</label>
+                <input type="number" min="100" required value={chunkSize} onChange={e => setChunkSize(e.target.value)} className="bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-fuchsia-500 transition-colors" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-[var(--text-2)]">Chunk Overlap (chars):</label>
+                <input type="number" min="0" required value={chunkOverlap} onChange={e => setChunkOverlap(e.target.value)} className="bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-fuchsia-500 transition-colors" />
+              </div>
+              <button type="submit" disabled={kbLoading} className="md:col-span-2 py-3 mt-2 rounded-xl bg-fuchsia-500 hover:bg-fuchsia-400 disabled:opacity-50 text-white font-semibold transition-colors shadow-lg shadow-fuchsia-500/20">
+                {kbLoading ? 'Processing...' : 'Upload to Knowledge Base'}
+              </button>
+            </form>
+            <div className="border-t border-[var(--border)] pt-4 mt-2">
+              <button type="button" onClick={handleClearKB} disabled={kbLoading} className="w-full py-3 rounded-xl border border-rose-500/50 text-rose-400 hover:bg-rose-500 hover:text-white disabled:opacity-50 font-semibold transition-colors">
+                Clear Entire Knowledge Base
+              </button>
+            </div>
           </section>
 
           {/* Manage Users Section */}

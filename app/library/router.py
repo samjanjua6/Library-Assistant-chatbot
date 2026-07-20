@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -11,7 +11,7 @@ from ..core.deps import get_current_user, get_current_admin_user
 from ..users.model import User
 from .model import Book, Loan
 from .service import return_book, ReturnBookArgs
-
+from .rag import add_document_to_kb, clear_knowledge_base
 router = APIRouter(tags=["Library"])
 
 # --- Pydantic Schemas for Requests/Responses ---
@@ -139,3 +139,44 @@ def admin_get_all_loans(db: Session = Depends(get_db), admin: User = Depends(get
             "status": loan.status
         })
     return results
+
+@router.post("/api/library/admin/knowledge-base/upload")
+async def admin_upload_kb(
+    file: UploadFile = File(...),
+    chunk_size: int = Form(1000),
+    chunk_overlap: int = Form(200),
+    admin: User = Depends(get_current_admin_user)
+):
+    """Upload a document to the knowledge base with dynamic chunking."""
+    if not (file.filename.endswith(".txt") or file.filename.endswith(".pdf")):
+        raise HTTPException(status_code=400, detail="Only .txt and .pdf files are supported.")
+    
+    content = await file.read()
+    
+    if file.filename.endswith(".pdf"):
+        import io
+        from pypdf import PdfReader
+        pdf_file = io.BytesIO(content)
+        reader = PdfReader(pdf_file)
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+    else:
+        text = content.decode("utf-8")
+    
+    try:
+        add_document_to_kb(file.filename, text, chunk_size, chunk_overlap)
+        return {"success": True, "message": f"Successfully ingested {file.filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/api/library/admin/knowledge-base")
+def admin_clear_kb(admin: User = Depends(get_current_admin_user)):
+    """Clear the knowledge base."""
+    try:
+        clear_knowledge_base()
+        return {"success": True, "message": "Knowledge base cleared."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

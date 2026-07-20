@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 # pyrefly: ignore [missing-import]
 import chromadb
 from pathlib import Path
@@ -99,3 +100,44 @@ def search_knowledge_base(query: str, n_results: int = 3) -> str:
 if __name__ == "__main__":
     # Test ingestion when run directly
     ingest_documents()
+
+def sliding_window_chunker(text: str, chunk_size: int, chunk_overlap: int):
+    """Chunks text using a simple sliding window based on character count."""
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        chunks.append(text[start:end])
+        if end == len(text):
+            break
+        start += (chunk_size - chunk_overlap)
+    return chunks
+
+def add_document_to_kb(filename: str, content: str, chunk_size: int = 1000, chunk_overlap: int = 200):
+    """Chunks a document and adds it to ChromaDB."""
+    chunks = sliding_window_chunker(content, chunk_size, chunk_overlap)
+    if not chunks:
+        return
+        
+    documents = []
+    metadatas = []
+    ids = []
+    
+    for i, chunk in enumerate(chunks):
+        doc_id = f"{filename}_{uuid.uuid4().hex[:8]}_chunk_{i}"
+        documents.append(chunk)
+        metadatas.append({"source": filename, "chunk_index": i})
+        ids.append(doc_id)
+        
+    collection.add(
+        documents=documents,
+        metadatas=metadatas,
+        ids=ids
+    )
+
+def clear_knowledge_base():
+    """Deletes all documents from the knowledge base collection."""
+    existing = collection.get()
+    if existing and existing['ids']:
+        collection.delete(ids=existing['ids'])
+
