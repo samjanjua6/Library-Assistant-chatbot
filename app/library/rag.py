@@ -40,6 +40,7 @@ def _extract_txt(file_path: Path) -> str:
 def _extract_pdf(file_path: Path) -> str:
     """Extract text from a PDF file using pypdf."""
     try:
+        # pyrefly: ignore [missing-import]
         from pypdf import PdfReader
         reader = PdfReader(str(file_path))
         pages = []
@@ -59,6 +60,7 @@ def _extract_pdf(file_path: Path) -> str:
 def _extract_docx(file_path: Path) -> str:
     """Extract text from a .docx file using python-docx."""
     try:
+        # pyrefly: ignore [missing-import]
         from docx import Document
         doc = Document(str(file_path))
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]

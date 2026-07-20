@@ -18,6 +18,7 @@ from ..library.service import (
     get_my_borrowed_books, GetBorrowedBooksArgs
 )
 from ..library.rag import search_knowledge_base
+from ..library.evaluator import evaluate_retrieval
 
 
 def _client() -> AsyncOpenAI:
@@ -217,6 +218,9 @@ async def stream_reply(
     total_prompt_tokens = 0
     total_completion_tokens = 0
 
+    # Track knowledge base retrieval data for Precision/Recall evaluation
+    kb_eval_data: dict = {"question": user_message, "chunks": []}
+
     MAX_TOOL_LOOPS = 5
     for loop_idx in range(MAX_TOOL_LOOPS):
         print(f"DEBUG: Loop {loop_idx}. Last message role: {messages[-1]['role']}")
@@ -322,6 +326,17 @@ async def stream_reply(
                     yield f"[STATUS:Executing {name}...]"
                 
                 result_json = execute_tool(name, args, user_id)
+
+                # ── Capture KB retrieval data for evaluation ──────────────
+                if name == "search_knowledge_base":
+                    try:
+                        result_data = json.loads(result_json)
+                        if result_data.get("status") == "success":
+                            kb_eval_data["chunks"] = result_data.get("results", [])
+                    except Exception:
+                        pass
+                # ─────────────────────────────────────────────────────────
+
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc["id"],
@@ -337,7 +352,13 @@ async def stream_reply(
     # Calculate cost
     cost = (total_prompt_tokens * 0.59 / 1_000_000) + (total_completion_tokens * 0.79 / 1_000_000)
     print(f"[Cerebras Usage] Model: gemma-4-31b (Estimated) | Prompt Tokens: {total_prompt_tokens} | Completion Tokens: {total_completion_tokens} | Cost: ${cost:.8f}")
-    
+
+    # ── Precision / Recall Evaluation ─────────────────────────────────────────
+    if kb_eval_data["chunks"]:
+        metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"])
+        yield f"[METRICS:{json.dumps(metrics)}]"
+    # ──────────────────────────────────────────────────────────────────────────
+
     # Yield usage data as a metadata string to be picked up by the WebSocket
     yield f"[USAGE:{{\"prompt_tokens\": {total_prompt_tokens}, \"completion_tokens\": {total_completion_tokens}, \"cost\": {cost:.8f}}}]"
 

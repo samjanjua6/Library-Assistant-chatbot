@@ -235,6 +235,25 @@ export default function ChatPage() {
       }
       return
     }
+    if (data.startsWith('[METRICS:')) {
+      const metricsJson = data.replace('[METRICS:', '').replace(/\]$/, '')
+      try {
+        const metrics = JSON.parse(metricsJson)
+        setMessages(prev => {
+          const copy = [...prev]
+          for (let i = copy.length - 1; i >= 0; i--) {
+            if (copy[i].type === 'bot') {
+              copy[i] = { ...copy[i], metrics }
+              break
+            }
+          }
+          return copy
+        })
+      } catch (e) {
+        console.error("Failed to parse metrics:", e)
+      }
+      return
+    }
     if (data.startsWith('[STATUS:')) {
       const statusMsg = data.replace('[STATUS:', '').replace(/\]$/, '')
       setToolStatus(statusMsg)

@@ -1,5 +1,74 @@
 import { useEffect, useRef, useState } from 'react'
 
+function MetricsBar({ label, value, color }) {
+  const pct = value !== null ? Math.round(value * 100) : null
+  const barColor = pct === null ? 'bg-gray-600'
+    : pct >= 75 ? 'bg-emerald-500'
+    : pct >= 45 ? 'bg-amber-400'
+    : 'bg-rose-500'
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-2)' }}>{label}</span>
+        <span className={`text-[10px] font-bold ${pct === null ? 'text-gray-500' : pct >= 75 ? 'text-emerald-400' : pct >= 45 ? 'text-amber-400' : 'text-rose-400'}`}>
+          {pct === null ? 'N/A' : `${pct}%`}
+        </span>
+      </div>
+      <div className="h-1.5 w-full rounded-full" style={{ background: 'var(--glass-hi)' }}>
+        <div
+          className={`h-1.5 rounded-full transition-all duration-700 ${barColor}`}
+          style={{ width: pct === null ? '0%' : `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function MetricsCard({ metrics }) {
+  const [open, setOpen] = useState(false)
+  if (!metrics) return null
+
+  const { precision, recall, f1_score, relevant_chunks, total_chunks } = metrics
+  const hasData = precision !== null
+
+  return (
+    <div className="mt-2 pt-1.5 border-t border-dashed" style={{ borderColor: 'var(--border)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1.5 outline-none"
+        style={{ color: 'var(--text-2)' }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        {open ? 'Hide Metrics' : 'Show RAG Metrics'}
+      </button>
+
+      {open && (
+        <div
+          className="mt-1.5 p-3 rounded-xl flex flex-col gap-2"
+          style={{ background: 'var(--glass-input)', border: '1px solid var(--border)' }}
+        >
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>📊 RAG Retrieval Evaluation</p>
+          <MetricsBar label="Precision" value={precision} />
+          <MetricsBar label="Recall" value={recall} />
+          <MetricsBar label="F1 Score" value={f1_score} />
+          <div className="pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>
+              {hasData
+                ? <>{relevant_chunks} of {total_chunks} retrieved chunks were <span className="text-emerald-400 font-semibold">relevant</span></>
+                : 'Evaluation unavailable for this response.'}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function formatMessageText(text) {
   if (!text) return '';
   
@@ -127,7 +196,7 @@ function Message({ msg, username }) {
           <span className="inline-block w-0.5 h-3.5 ml-0.5 align-middle rounded-sm animate-pulse" style={{ background: 'var(--text-2)' }} />
         )}
 
-        {/* Stats Button */}
+        {/* Stats Button (Usage & Cost) */}
         {!isUser && msg.usage && (
           <div className="mt-2 pt-1.5 border-t border-dashed" style={{ borderColor: 'var(--border)' }}>
             <button
@@ -154,6 +223,9 @@ function Message({ msg, username }) {
             )}
           </div>
         )}
+
+        {/* RAG Metrics Card — only shown when KB was searched */}
+        {!isUser && msg.metrics && <MetricsCard metrics={msg.metrics} />}
       </div>
     </div>
   )
