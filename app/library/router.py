@@ -179,6 +179,9 @@ def sync_git_knowledge_base(action: str, filename: str):
         error_output = e.stderr.decode().strip() if e.stderr else str(e)
         print(f"[Git Sync Error] {error_output}")
         return False, error_output
+    except Exception as e:
+        print(f"[Git Sync Error] Unexpected error: {e}")
+        return False, str(e)
 
 
 @router.get("/api/library/admin/knowledge-base")

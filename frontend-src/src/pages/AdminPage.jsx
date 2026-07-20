@@ -70,7 +70,7 @@ function KnowledgeBaseManager() {
     if (failed.length === 0) {
       setStatusMsg({ type: 'success', text: `✓ ${results.length} file(s) uploaded successfully!` })
     } else {
-      setStatusMsg({ type: 'error', text: `${failed.length} file(s) failed: ${failed.map(f => f.name).join(', ')}` })
+      setStatusMsg({ type: 'error', text: `${failed.length} file(s) failed: ${failed.map(f => `${f.name} (${f.msg})`).join(', ')}` })
     }
     setTimeout(() => setStatusMsg(null), 5000)
   }
