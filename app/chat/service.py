@@ -68,8 +68,45 @@ async def is_harmful_input(text: str) -> bool:
     return False
 
 
-# --- Tool Definitions for Groq ---
-TOOLS = [
+# --- Tool Definitions ---
+ORCHESTRATOR_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "call_catalog_agent",
+            "description": "Route to the Library Catalog Specialist to handle finding books, checking availability, borrowing, returning, and listing active loans.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The explicit request to pass to the Catalog Agent."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "call_policy_agent",
+            "description": "Route to the Policy Specialist to search the knowledge base for library rules, fees, hours, and amenities.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The explicit question to pass to the Policy Agent."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    }
+]
+
+CATALOG_TOOLS = [
     {
         "type": "function",
         "function": {
@@ -80,7 +117,7 @@ TOOLS = [
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "The title, author, or genre to search for (e.g., 'Tolkien', 'Sci-Fi'). Leave empty to see all books."
+                        "description": "The title, author, or genre to search for. Leave empty to see all books."
                     }
                 },
                 "required": ["query"]
@@ -95,10 +132,7 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "book_id": {
-                        "type": "integer",
-                        "description": "The ID of the book"
-                    }
+                    "book_id": {"type": "integer"}
                 },
                 "required": ["book_id"]
             }
@@ -112,10 +146,7 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "book_id": {
-                        "type": "integer",
-                        "description": "The ID of the book to borrow"
-                    }
+                    "book_id": {"type": "integer"}
                 },
                 "required": ["book_id"]
             }
@@ -129,10 +160,7 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "book_id": {
-                        "type": "integer",
-                        "description": "The ID of the book to return"
-                    }
+                    "book_id": {"type": "integer"}
                 },
                 "required": ["book_id"]
             }
@@ -148,7 +176,10 @@ TOOLS = [
                 "properties": {}
             }
         }
-    },
+    }
+]
+
+POLICY_TOOLS = [
     {
         "type": "function",
         "function": {
@@ -192,6 +223,84 @@ def execute_tool(name: str, args_json: str, user_id: int) -> str:
         return json.dumps({"status": "error", "message": str(e)})
 
 
+async def run_catalog_agent(query: str, user_id: int) -> tuple[str, int, int]:
+    """Agent specialized in catalog operations. Returns (response_text, prompt_tokens, completion_tokens)."""
+    client = _client()
+    messages = [
+        {"role": "system", "content": "You are the Library Catalog Agent. Use your tools to search books, check availability, borrow, return, and list active loans to fulfill the user's request. Answer concisely."},
+        {"role": "user", "content": query}
+    ]
+    p_tokens, c_tokens = 0, 0
+    for _ in range(3):
+        try:
+            resp = await call_with_retry(
+                client.chat.completions.create,
+                model="gemma-4-31b",
+                messages=messages,
+                tools=CATALOG_TOOLS,
+                tool_choice="auto",
+                temperature=0.3,
+                max_tokens=1024,
+            )
+            msg = resp.choices[0].message
+            p_tokens += resp.usage.prompt_tokens if resp.usage else 0
+            c_tokens += resp.usage.completion_tokens if resp.usage else 0
+            
+            if msg.tool_calls:
+                messages.append(msg)
+                for tc in msg.tool_calls:
+                    res = execute_tool(tc.function.name, tc.function.arguments, user_id)
+                    messages.append({"role": "tool", "tool_call_id": tc.id, "content": res})
+            else:
+                return msg.content or "Task complete.", p_tokens, c_tokens
+        except Exception as e:
+            return f"Catalog Agent Error: {e}", p_tokens, c_tokens
+    return "Catalog Agent max loops reached.", p_tokens, c_tokens
+
+
+async def run_policy_agent(query: str, user_id: int) -> tuple[str, list, int, int]:
+    """Agent specialized in policy/knowledge base. Returns (response_text, retrieved_chunks, prompt_tokens, completion_tokens)."""
+    client = _client()
+    messages = [
+        {"role": "system", "content": "You are the Policy Agent. Use your search_knowledge_base tool to answer the user's questions about library rules, fees, hours, etc. Answer concisely based only on retrieved context."},
+        {"role": "user", "content": query}
+    ]
+    p_tokens, c_tokens = 0, 0
+    kb_chunks = []
+    for _ in range(3):
+        try:
+            resp = await call_with_retry(
+                client.chat.completions.create,
+                model="gemma-4-31b",
+                messages=messages,
+                tools=POLICY_TOOLS,
+                tool_choice="auto",
+                temperature=0.3,
+                max_tokens=1024,
+            )
+            msg = resp.choices[0].message
+            p_tokens += resp.usage.prompt_tokens if resp.usage else 0
+            c_tokens += resp.usage.completion_tokens if resp.usage else 0
+            
+            if msg.tool_calls:
+                messages.append(msg)
+                for tc in msg.tool_calls:
+                    res = execute_tool(tc.function.name, tc.function.arguments, user_id)
+                    if tc.function.name == "search_knowledge_base":
+                        try:
+                            parsed = json.loads(res)
+                            if parsed.get("status") == "success":
+                                kb_chunks.extend(parsed.get("results", []))
+                        except Exception:
+                            pass
+                    messages.append({"role": "tool", "tool_call_id": tc.id, "content": res})
+            else:
+                return msg.content or "Task complete.", kb_chunks, p_tokens, c_tokens
+        except Exception as e:
+            return f"Policy Agent Error: {e}", kb_chunks, p_tokens, c_tokens
+    return "Policy Agent max loops reached.", kb_chunks, p_tokens, c_tokens
+
+
 async def stream_reply(
     history: list[dict],
     user_message: str,
@@ -199,157 +308,107 @@ async def stream_reply(
     retrieved_context: str = "",
 ) -> AsyncGenerator[str, None]:
     """
-    Stream a Groq reply token-by-token over an async generator, supporting tool calling.
+    Orchestrator stream_reply. Acts as a router.
     """
-    # 1. Content Moderation Check
     if await is_harmful_input(user_message):
-        yield "[Safety Warning: Your message has been flagged by our content moderation system. Please keep the conversation safe, respectful, and educational.]"
+        yield "[Safety Warning: Content flagged.]"
         return
 
     client = _client()
-    system_prompt = build_system_prompt(retrieved_context)
-
-    # Prepare messages payload
-    messages = [{"role": "system", "content": system_prompt}]
+    orchestrator_prompt = "You are the Orchestrator for the Library Assistant. Your job is routing, not answering. Delegate catalog queries to the Catalog Agent. Delegate policy/rules queries to the Policy Agent. If the user's message is a simple greeting, you can reply directly. DO NOT attempt to answer policy or catalog questions yourself. Use your routing tools."
+    
+    messages = [{"role": "system", "content": orchestrator_prompt}]
     messages.extend(_to_groq_history(history))
     messages.append({"role": "user", "content": user_message})
 
-    # Track usage across loops
     total_prompt_tokens = 0
     total_completion_tokens = 0
+    kb_eval_data = {"question": user_message, "chunks": [], "error": None}
 
-    # Track knowledge base retrieval data for Precision/Recall evaluation
-    kb_eval_data: dict = {"question": user_message, "chunks": []}
-
-    MAX_TOOL_LOOPS = 5
-    for loop_idx in range(MAX_TOOL_LOOPS):
-        print(f"DEBUG: Loop {loop_idx}. Last message role: {messages[-1]['role']}")
+    MAX_ROUTING_HOPS = 3
+    for loop_idx in range(MAX_ROUTING_HOPS):
         try:
             stream = await call_with_retry(
                 client.chat.completions.create,
                 model="gemma-4-31b",
                 messages=messages,
-                tools=TOOLS,
+                tools=ORCHESTRATOR_TOOLS,
                 tool_choice="auto",
-                temperature=0.7,
+                temperature=0.3,
                 max_tokens=2048,
                 stream=True,
             )
-        except (RateLimitError, APITimeoutError, APIConnectionError) as e:
-            print(f"[Groq Error] Chat completion failed after retries: {e}")
-            yield f"\n\n[System Error: The Library Assistant is currently busy (Rate Limit/Timeout). Please try again in a few seconds. Details: {e}]"
+        except Exception as e:
+            yield f"\n\n[System Error: Orchestrator failed: {e}]"
             return
         
-        # Buffer variables
         completion_text = ""
-        tool_calls_buffer: Dict[int, Any] = {}
+        tool_calls_buffer = {}
         
         try:
             async for chunk in stream:
-                if not chunk.choices:
-                    continue
-                    
+                if not chunk.choices: continue
                 delta = chunk.choices[0].delta
                 
-                # 1. Accumulate text content if any
                 if delta.content:
                     completion_text += delta.content
                     yield delta.content
                     
-                # 2. Accumulate tool calls if any
                 if delta.tool_calls:
                     for tc in delta.tool_calls:
                         idx = tc.index
                         if idx not in tool_calls_buffer:
-                            tool_calls_buffer[idx] = {
-                                "id": tc.id,
-                                "type": "function",
-                                "function": {"name": tc.function.name, "arguments": tc.function.arguments or ""}
-                            }
+                            tool_calls_buffer[idx] = {"id": tc.id, "type": "function", "function": {"name": tc.function.name, "arguments": tc.function.arguments or ""}}
                         else:
-                            if tc.function.name:
-                                tool_calls_buffer[idx]["function"]["name"] += tc.function.name
-                            if tc.function.arguments:
-                                tool_calls_buffer[idx]["function"]["arguments"] += tc.function.arguments
-        except APIError as e:
-            print(f"[Cerebras APIError] {e}")
-            yield f"\n\n[System Error: Cerebras failed to parse the generated tool response. Details: {str(e)}]"
+                            if tc.function.name: tool_calls_buffer[idx]["function"]["name"] += tc.function.name
+                            if tc.function.arguments: tool_calls_buffer[idx]["function"]["arguments"] += tc.function.arguments
+        except Exception as e:
+            yield f"\n\n[System Error: Stream failed: {e}]"
             break
-                            
-        # Calculate tokens for this loop (approx)
-        loop_prompt_tokens = max(1, int(len(json.dumps(messages)) / 3.9))
-        loop_completion_tokens = max(1, int(len(completion_text) / 3.9) + (len(json.dumps(tool_calls_buffer)) // 3.9))
-        total_prompt_tokens += loop_prompt_tokens
-        total_completion_tokens += int(loop_completion_tokens)
+            
+        loop_p = max(1, int(len(json.dumps(messages)) / 3.9))
+        loop_c = max(1, int(len(completion_text) / 3.9) + (len(json.dumps(tool_calls_buffer)) // 3.9))
+        total_prompt_tokens += loop_p
+        total_completion_tokens += loop_c
         
         if tool_calls_buffer:
-            # Reconstruct the assistant message with tool calls
             tool_calls_list = []
             for idx in sorted(tool_calls_buffer.keys()):
                 tc = tool_calls_buffer[idx]
-                tool_calls_list.append({
-                    "id": tc["id"],
-                    "type": "function",
-                    "function": {
-                        "name": tc["function"]["name"],
-                        "arguments": tc["function"]["arguments"]
-                    }
-                })
+                tool_calls_list.append({"id": tc["id"], "type": "function", "function": {"name": tc["function"]["name"], "arguments": tc["function"]["arguments"]}})
                 
-            # Append the assistant's request to call tools
-            assistant_msg = {
-                "role": "assistant",
-                "content": completion_text if completion_text else None,
-                "tool_calls": tool_calls_list
-            }
-            messages.append(assistant_msg)
+            messages.append({"role": "assistant", "content": completion_text if completion_text else None, "tool_calls": tool_calls_list})
             
-            # Execute each tool and append the response
             for tc in tool_calls_list:
                 name = tc["function"]["name"]
-                args = tc["function"]["arguments"]
+                try:
+                    args = json.loads(tc["function"]["arguments"])
+                except Exception:
+                    args = {}
+                query = args.get("query", user_message)
                 
-                # Yield a status metadata token so the frontend can display a temporary loading state
-                if name == "search_books":
-                    yield "[STATUS:Searching the library catalog...]"
-                elif name == "borrow_book":
-                    yield "[STATUS:Processing your borrow request...]"
-                elif name == "return_book":
-                    yield "[STATUS:Processing your return...]"
-                elif name == "check_availability":
-                    yield "[STATUS:Checking book availability...]"
-                elif name == "get_my_borrowed_books":
-                    yield "[STATUS:Checking your active loans...]"
-                elif name == "search_knowledge_base":
-                    yield "[STATUS:Searching the knowledge base...]"
+                if name == "call_catalog_agent":
+                    yield "\n\n*[STATUS: Delegating to Catalog Agent...]*\n"
+                    res_text, p_tok, c_tok = await run_catalog_agent(query, user_id)
+                    total_prompt_tokens += p_tok
+                    total_completion_tokens += c_tok
+                    messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
+                    
+                elif name == "call_policy_agent":
+                    yield "\n\n*[STATUS: Delegating to Policy Agent...]*\n"
+                    res_text, chunks, p_tok, c_tok = await run_policy_agent(query, user_id)
+                    kb_eval_data["chunks"].extend(chunks)
+                    total_prompt_tokens += p_tok
+                    total_completion_tokens += c_tok
+                    messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
                 else:
-                    yield f"[STATUS:Executing {name}...]"
-                
-                result_json = execute_tool(name, args, user_id)
-
-                # ── Capture KB retrieval data for evaluation ──────────────
-                if name == "search_knowledge_base":
-                    try:
-                        result_data = json.loads(result_json)
-                        if result_data.get("status") == "success":
-                            kb_eval_data["chunks"] = result_data.get("results", [])
-                    except Exception:
-                        pass
-                # ─────────────────────────────────────────────────────────
-
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tc["id"],
-                    "content": result_json
-                })
-            
-            # We loop again to send the tool results back to Groq!
+                    messages.append({"role": "tool", "tool_call_id": tc["id"], "content": f"Unknown agent: {name}"})
             continue
         else:
-            # No tool calls, streaming is done
             break
+    else:
+        yield "\n\n[System Warning: Max routing hops reached. Orchestrator forced to stop.]"
 
-    # Calculate cost
     cost = (total_prompt_tokens * 0.59 / 1_000_000) + (total_completion_tokens * 0.79 / 1_000_000)
     print(f"[Cerebras Usage] Model: gemma-4-31b (Estimated) | Prompt Tokens: {total_prompt_tokens} | Completion Tokens: {total_completion_tokens} | Cost: ${cost:.8f}")
 
