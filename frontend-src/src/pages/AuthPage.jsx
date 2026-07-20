@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import LoginForm from '../components/LoginForm'
@@ -69,8 +69,13 @@ export default function AuthPage() {
   const [alert, setAlert] = useState(null)
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (localStorage.getItem('zylo_token')) {
+      navigate('/chat', { replace: true })
+    }
+  }, [navigate])
+
   if (localStorage.getItem('zylo_token')) {
-    navigate('/chat', { replace: true })
     return null
   }
 
