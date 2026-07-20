@@ -22,8 +22,11 @@ function KnowledgeBaseManager() {
   const [uploading, setUploading] = useState(false)
   const [statusMsg, setStatusMsg] = useState(null) // { type: 'success'|'error', text }
   const [isDragging, setIsDragging] = useState(false)
-  const [chunkSize, setChunkSize] = useState(1000)
-  const [chunkOverlap, setChunkOverlap] = useState(200)
+  const [chunkSize, setChunkSize] = useState(() => Number(localStorage.getItem('zylo_chunk_size')) || 1000)
+  const [chunkOverlap, setChunkOverlap] = useState(() => Number(localStorage.getItem('zylo_chunk_overlap')) || 200)
+
+  useEffect(() => { localStorage.setItem('zylo_chunk_size', chunkSize) }, [chunkSize])
+  useEffect(() => { localStorage.setItem('zylo_chunk_overlap', chunkOverlap) }, [chunkOverlap])
   const fileRef = useRef()
   const token = localStorage.getItem('zylo_token')
   const headers = { Authorization: `Bearer ${token}` }
