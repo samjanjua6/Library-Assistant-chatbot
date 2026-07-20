@@ -64,7 +64,7 @@ Rules:
                 max_tokens=150,
                 stream=False,
             ),
-            timeout=8.0  # hard timeout — never block the main chat
+            timeout=20.0  # Increased timeout to allow for slightly slower model responses
         )
 
         raw = response.choices[0].message.content.strip()
