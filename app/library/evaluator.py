@@ -11,21 +11,25 @@ def _client() -> AsyncOpenAI:
     return AsyncOpenAI(api_key=settings.GROQ_API_KEY, base_url="https://api.cerebras.ai/v1")
 
 
-async def evaluate_retrieval(question: str, chunks: list[dict]) -> dict:
+async def evaluate_retrieval(question: str, chunks: list[dict], internal_error: str = None) -> dict:
     """
-    LLM-as-a-Judge: evaluates the quality of knowledge base retrieval
-    for a given question.
-
-    Returns a dict with precision, recall, f1_score, relevant_chunks, total_chunks.
-    Falls back to None values on any error so it never blocks the main chat.
+    Given a user question and a list of retrieved chunks, uses a fast LLM to estimate
+    Precision (how many chunks were relevant) and Recall (how completely the question was answered).
     """
+    total = len(chunks)
+    if internal_error:
+        return {
+            "precision": None, "recall": None, "f1_score": None,
+            "relevant_chunks": 0, "total_chunks": total,
+            "error": f"Search failed: {internal_error}"
+        }
+    
     if not chunks:
         return {
             "precision": None, "recall": None, "f1_score": None,
-            "relevant_chunks": 0, "total_chunks": 0
+            "relevant_chunks": 0, "total_chunks": total,
+            "error": "No documents found in search."
         }
-
-    total = len(chunks)
 
     # Build a numbered list of chunk texts for the prompt
     chunks_text = "\n\n".join(
@@ -102,13 +106,17 @@ Rules:
         }
 
     except asyncio.TimeoutError:
-        print("[Evaluator] Timed out — skipping metrics for this response.")
+        error_msg = "Evaluator LLM timed out."
+        print(f"[Evaluator] {error_msg}")
     except json.JSONDecodeError as e:
-        print(f"[Evaluator] JSON parse error: {e}")
+        error_msg = f"JSON parse error: {e}"
+        print(f"[Evaluator] {error_msg}")
     except Exception as e:
-        print(f"[Evaluator] Unexpected error: {e}")
+        error_msg = f"Unexpected error: {e}"
+        print(f"[Evaluator] {error_msg}")
 
     return {
         "precision": None, "recall": None, "f1_score": None,
-        "relevant_chunks": 0, "total_chunks": total
+        "relevant_chunks": 0, "total_chunks": total,
+        "error": error_msg
     }

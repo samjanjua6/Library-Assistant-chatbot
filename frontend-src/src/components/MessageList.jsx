@@ -29,7 +29,7 @@ function MetricsCard({ metrics }) {
   const [open, setOpen] = useState(false)
   if (!metrics) return null
 
-  const { precision, recall, f1_score, relevant_chunks, total_chunks } = metrics
+  const { precision, recall, f1_score, relevant_chunks, total_chunks, error } = metrics
   const hasData = precision !== null
 
   return (
@@ -58,7 +58,9 @@ function MetricsCard({ metrics }) {
           <MetricsBar label="F1 Score" value={f1_score} />
           <div className="pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
             <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>
-              {hasData
+              {error ? (
+                <span className="text-rose-400 font-medium">Error: {error}</span>
+              ) : hasData
                 ? <>{relevant_chunks} of {total_chunks} retrieved chunks were <span className="text-emerald-400 font-semibold">relevant</span></>
                 : 'Evaluation unavailable for this response.'}
             </p>
@@ -132,7 +134,9 @@ function BotMessageFooter({ msg }) {
           <MetricsBar label="F1 Score"  value={hasMetricData ? f1_score  : null} />
           <div className="pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
             <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>
-              {hasMetricData
+              {msg.metrics.error ? (
+                <span className="text-rose-400 font-medium">Error: {msg.metrics.error}</span>
+              ) : hasMetricData
                 ? <>{relevant_chunks} of {total_chunks} retrieved chunks were <span className="text-emerald-400 font-semibold">relevant</span></>
                 : 'Evaluation unavailable for this response.'}
             </p>
