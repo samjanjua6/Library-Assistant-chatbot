@@ -16,9 +16,14 @@ from .auth.google import router as google_router
 from .chat.router import router as chat_router
 from .users.router import router as users_router
 from .library.router import router as library_router
+from .library.rag import ingest_documents
 
 
 Base.metadata.create_all(bind=engine)
+
+# Automatically ingest any loose files in the knowledge_base directory on startup
+# (ChromaDB upsert is idempotent, so this won't duplicate existing chunks)
+ingest_documents()
 
 app = FastAPI(
     title="Zylo — FastAPI Chat",

@@ -15,7 +15,7 @@ const SidebarIcon = () => (
   </svg>
 )
 
-export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, isSidebarOpen, onDashboard }) {
+export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, isSidebarOpen, onDashboard, onAdmin }) {
   const { dot, label } = STATUS_CONFIG[wsStatus] ?? STATUS_CONFIG.offline
   const initial = username.charAt(0).toUpperCase()
 
@@ -61,6 +61,14 @@ export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, 
             className="text-sm font-medium text-[var(--text-2)] hover:text-indigo-400 transition-colors hidden sm:block mr-2"
           >
             Dashboard
+          </button>
+        )}
+        {onAdmin && (
+          <button 
+            onClick={onAdmin}
+            className="text-sm font-medium text-[var(--text-2)] hover:text-indigo-400 transition-colors hidden sm:block mr-2"
+          >
+            Admin
           </button>
         )}
         <ThemeToggle />

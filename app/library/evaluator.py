@@ -55,7 +55,7 @@ Rules:
         client = _client()
         response = await asyncio.wait_for(
             client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="gemma-4-31b",
                 messages=[
                     {"role": "system", "content": "You are a JSON-only RAG evaluation assistant. Output only valid JSON."},
                     {"role": "user", "content": prompt}

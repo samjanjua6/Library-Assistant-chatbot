@@ -69,6 +69,80 @@ function MetricsCard({ metrics }) {
   )
 }
 
+function BotMessageFooter({ msg }) {
+  const [tab, setTab] = useState(null) // null | 'usage' | 'metrics'
+  const hasUsage   = !!msg.usage
+  const hasMetrics = !!msg.metrics
+
+  if (!hasUsage && !hasMetrics) return null
+
+  const { precision, recall, f1_score, relevant_chunks, total_chunks } = msg.metrics ?? {}
+  const hasMetricData = precision !== null && precision !== undefined
+
+  return (
+    <div className="mt-2 pt-1.5 border-t border-dashed" style={{ borderColor: 'var(--border)' }}>
+      {/* Tab buttons row */}
+      <div className="flex items-center gap-3">
+        {hasUsage && (
+          <button
+            onClick={() => setTab(t => t === 'usage' ? null : 'usage')}
+            className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1 outline-none"
+            style={{ color: tab === 'usage' ? 'var(--text-1)' : 'var(--text-2)' }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            Usage & Cost
+          </button>
+        )}
+        {hasUsage && hasMetrics && (
+          <span className="text-[10px]" style={{ color: 'var(--border)' }}>|</span>
+        )}
+        {hasMetrics && (
+          <button
+            onClick={() => setTab(t => t === 'metrics' ? null : 'metrics')}
+            className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1 outline-none"
+            style={{ color: tab === 'metrics' ? 'var(--text-1)' : 'var(--text-2)' }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            RAG Metrics
+          </button>
+        )}
+      </div>
+
+      {/* Usage panel */}
+      {tab === 'usage' && (
+        <div className="mt-1.5 p-2 rounded-lg text-[10px] font-mono flex flex-col gap-0.5"
+          style={{ background: 'var(--glass-input)', border: '1px solid var(--border)', color: 'var(--text-1)' }}>
+          <div>Prompt Tokens: <span className="font-semibold text-sky-500">{msg.usage.prompt_tokens}</span></div>
+          <div>Completion Tokens: <span className="font-semibold text-sky-500">{msg.usage.completion_tokens}</span></div>
+          <div>Estimated Cost: <span className="font-semibold text-emerald-500">${msg.usage.cost.toFixed(6)}</span></div>
+        </div>
+      )}
+
+      {/* Metrics panel */}
+      {tab === 'metrics' && (
+        <div className="mt-1.5 p-3 rounded-xl flex flex-col gap-2"
+          style={{ background: 'var(--glass-input)', border: '1px solid var(--border)' }}>
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>📊 RAG Retrieval Evaluation</p>
+          <MetricsBar label="Precision" value={hasMetricData ? precision : null} />
+          <MetricsBar label="Recall"    value={hasMetricData ? recall    : null} />
+          <MetricsBar label="F1 Score"  value={hasMetricData ? f1_score  : null} />
+          <div className="pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>
+              {hasMetricData
+                ? <>{relevant_chunks} of {total_chunks} retrieved chunks were <span className="text-emerald-400 font-semibold">relevant</span></>
+                : 'Evaluation unavailable for this response.'}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function formatMessageText(text) {
   if (!text) return '';
   
@@ -137,7 +211,6 @@ function BotIntro() {
 }
 
 function Message({ msg, username }) {
-  const [showStats, setShowStats] = useState(false)
 
   if (msg.type === 'system') {
     return (
@@ -196,36 +269,8 @@ function Message({ msg, username }) {
           <span className="inline-block w-0.5 h-3.5 ml-0.5 align-middle rounded-sm animate-pulse" style={{ background: 'var(--text-2)' }} />
         )}
 
-        {/* Stats Button (Usage & Cost) */}
-        {!isUser && msg.usage && (
-          <div className="mt-2 pt-1.5 border-t border-dashed" style={{ borderColor: 'var(--border)' }}>
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1.5 outline-none"
-              style={{ color: 'var(--text-2)' }}
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
-              {showStats ? "Hide Stats" : "Show Usage & Cost"}
-            </button>
-            {showStats && (
-              <div 
-                className="mt-1.5 p-2 rounded-lg text-[10px] font-mono flex flex-col gap-0.5" 
-                style={{ background: 'var(--glass-input)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
-              >
-                <div>Prompt Tokens: <span className="font-semibold text-sky-500">{msg.usage.prompt_tokens}</span></div>
-                <div>Completion Tokens: <span className="font-semibold text-sky-500">{msg.usage.completion_tokens}</span></div>
-                <div>Estimated Cost: <span className="font-semibold text-emerald-500">${msg.usage.cost.toFixed(6)}</span></div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* RAG Metrics Card — only shown when KB was searched */}
-        {!isUser && msg.metrics && <MetricsCard metrics={msg.metrics} />}
+        {/* Unified footer: Usage & Cost + RAG Metrics */}
+        {!isUser && <BotMessageFooter msg={msg} />}
       </div>
     </div>
   )

@@ -354,9 +354,8 @@ async def stream_reply(
     print(f"[Cerebras Usage] Model: gemma-4-31b (Estimated) | Prompt Tokens: {total_prompt_tokens} | Completion Tokens: {total_completion_tokens} | Cost: ${cost:.8f}")
 
     # ── Precision / Recall Evaluation ─────────────────────────────────────────
-    if kb_eval_data["chunks"]:
-        metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"])
-        yield f"[METRICS:{json.dumps(metrics)}]"
+    metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"])
+    yield f"[METRICS:{json.dumps(metrics)}]"
     # ──────────────────────────────────────────────────────────────────────────
 
     # Yield usage data as a metadata string to be picked up by the WebSocket

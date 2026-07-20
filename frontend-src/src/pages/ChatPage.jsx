@@ -329,6 +329,7 @@ export default function ChatPage() {
         onToggleSidebar={() => setShowSidebar(!showSidebar)}
         isSidebarOpen={showSidebar}
         onDashboard={() => navigate('/dashboard')}
+        onAdmin={() => navigate('/admin')}
       />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar

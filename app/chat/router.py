@@ -155,7 +155,7 @@ async def chat_socket(
             full_reply = ""
             try:
                 async for token_chunk in stream_reply(history, user_message, user.id, retrieved_context):
-                    if token_chunk.startswith("[USAGE:") or token_chunk.startswith("[STATUS:"):
+                    if token_chunk.startswith("[USAGE:") or token_chunk.startswith("[STATUS:") or token_chunk.startswith("[METRICS:"):
                         await websocket.send_text(token_chunk)
                         continue
                     full_reply += token_chunk
