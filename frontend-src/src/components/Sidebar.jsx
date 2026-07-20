@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function Sidebar({
   sessions,
@@ -8,6 +8,37 @@ export default function Sidebar({
   onDeleteSession,
   isOpen,
 }) {
+  const [chunkSize, setChunkSize] = useState(() => Number(localStorage.getItem('zylo_chunk_size')) || 1000)
+  const [chunkOverlap, setChunkOverlap] = useState(() => Number(localStorage.getItem('zylo_chunk_overlap')) || 200)
+  const [isReingesting, setIsReingesting] = useState(false)
+
+  useEffect(() => { localStorage.setItem('zylo_chunk_size', chunkSize) }, [chunkSize])
+  useEffect(() => { localStorage.setItem('zylo_chunk_overlap', chunkOverlap) }, [chunkOverlap])
+
+  const handleReingest = async () => {
+    setIsReingesting(true)
+    const token = localStorage.getItem('zylo_token')
+    try {
+      const res = await fetch('/api/library/admin/knowledge-base/reingest', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ chunk_size: chunkSize, chunk_overlap: chunkOverlap })
+      })
+      if (res.ok) {
+        alert("Knowledge Base successfully rebuilt with new chunk settings!")
+      } else {
+        alert("Failed to rebuild knowledge base. Check console.")
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsReingesting(false)
+    }
+  }
+
   return (
     <div
       className="flex flex-col h-full shrink-0 transition-all duration-300 overflow-hidden"
@@ -73,6 +104,49 @@ export default function Sidebar({
               No chat history
             </div>
           )}
+        </div>
+
+        {/* Quick Chunking Settings Panel */}
+        <div className="p-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--border)', background: 'var(--glass-input)' }}>
+          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Quick Chunking Settings</h2>
+          
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col w-1/2">
+              <label className="text-[10px] mb-1" style={{ color: 'var(--text-2)' }}>Chunk Size</label>
+              <input 
+                type="number" 
+                value={chunkSize}
+                onChange={e => setChunkSize(Number(e.target.value))}
+                className="bg-black/10 border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-1)] outline-none focus:border-indigo-500 transition-colors" 
+              />
+            </div>
+            <div className="flex flex-col w-1/2">
+              <label className="text-[10px] mb-1" style={{ color: 'var(--text-2)' }}>Overlap</label>
+              <input 
+                type="number" 
+                value={chunkOverlap}
+                onChange={e => setChunkOverlap(Number(e.target.value))}
+                className="bg-black/10 border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-1)] outline-none focus:border-indigo-500 transition-colors" 
+              />
+            </div>
+          </div>
+          
+          <button
+            onClick={handleReingest}
+            disabled={isReingesting}
+            className={`w-full py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+              isReingesting ? 'bg-fuchsia-500/50 text-fuchsia-200 cursor-not-allowed' : 'bg-fuchsia-500 text-white hover:bg-fuchsia-400'
+            }`}
+          >
+            {isReingesting ? (
+              <>
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Rebuilding...
+              </>
+            ) : (
+              'Re-chunk & Index'
+            )}
+          </button>
         </div>
       </div>
     </div>

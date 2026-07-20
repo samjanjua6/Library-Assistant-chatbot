@@ -157,7 +157,7 @@ def sliding_window_chunker(text: str, chunk_size: int = 1000, chunk_overlap: int
 
 # ── Core ingestion ────────────────────────────────────────────────────────────
 
-def ingest_documents():
+def ingest_documents(chunk_size: int = 1000, chunk_overlap: int = 200):
     """
     Reads all supported files in the knowledge_base directory and upserts them into ChromaDB.
     Supports: .txt, .md, .pdf, .docx, .csv, .json, .xlsx
@@ -179,7 +179,7 @@ def ingest_documents():
             print(f"[RAG] No content extracted from {file_path.name}, skipping.")
             continue
 
-        chunks = sliding_window_chunker(content, chunk_size=1000, chunk_overlap=200)
+        chunks = sliding_window_chunker(content, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         for i, chunk in enumerate(chunks):
             if not chunk.strip():
                 continue

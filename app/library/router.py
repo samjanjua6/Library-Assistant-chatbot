@@ -15,8 +15,13 @@ from .model import Book, Loan
 from .service import return_book, ReturnBookArgs
 from .rag import (
     add_document_to_kb, delete_document, list_documents,
-    clear_knowledge_base, extract_text, KNOWLEDGE_BASE_DIR, SUPPORTED_EXTENSIONS
+    clear_knowledge_base, extract_text, KNOWLEDGE_BASE_DIR, SUPPORTED_EXTENSIONS,
+    ingest_documents
 )
+
+class ReingestPayload(BaseModel):
+    chunk_size: int
+    chunk_overlap: int
 
 router = APIRouter(tags=["Library"])
 
@@ -217,6 +222,17 @@ def admin_clear_kb(admin: User = Depends(get_current_admin_user)):
     try:
         clear_knowledge_base()
         return {"success": True, "message": "Knowledge base cleared."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/library/admin/knowledge-base/reingest")
+def admin_reingest_kb(payload: ReingestPayload, admin: User = Depends(get_current_admin_user)):
+    """Clear and rebuild the entire knowledge base from source files using new chunk settings."""
+    try:
+        clear_knowledge_base()
+        ingest_documents(chunk_size=payload.chunk_size, chunk_overlap=payload.chunk_overlap)
+        return {"success": True, "message": "Knowledge base rebuilt successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
