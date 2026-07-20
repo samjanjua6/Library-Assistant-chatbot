@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 import shutil
 from pathlib import Path
+import subprocess
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_current_admin_user
@@ -154,6 +155,32 @@ def admin_get_all_loans(db: Session = Depends(get_db), admin: User = Depends(get
 
 # ── Knowledge Base Endpoints ──────────────────────────────────────────────────
 
+def sync_git_knowledge_base(action: str, filename: str):
+    """
+    Automatically commits and pushes a knowledge base file to GitHub.
+    action: 'add' or 'rm'
+    """
+    try:
+        # Run git commands synchronously
+        cwd = str(Path(__file__).resolve().parent.parent.parent)
+        filepath = f"knowledge_base/{filename}"
+        
+        if action == 'add':
+            subprocess.run(["git", "add", filepath], cwd=cwd, check=True, capture_output=True)
+            msg = f"Auto-add {filename} to knowledge base"
+        else:
+            subprocess.run(["git", "rm", filepath], cwd=cwd, check=True, capture_output=True)
+            msg = f"Auto-remove {filename} from knowledge base"
+            
+        subprocess.run(["git", "commit", "-m", msg], cwd=cwd, check=True, capture_output=True)
+        subprocess.run(["git", "push", "origin", "main"], cwd=cwd, check=True, capture_output=True)
+        return True, ""
+    except subprocess.CalledProcessError as e:
+        error_output = e.stderr.decode().strip() if e.stderr else str(e)
+        print(f"[Git Sync Error] {error_output}")
+        return False, error_output
+
+
 @router.get("/api/library/admin/knowledge-base")
 def admin_list_kb(admin: User = Depends(get_current_admin_user)):
     """List all documents in the knowledge base."""
@@ -195,9 +222,14 @@ async def admin_upload_kb(
             raise HTTPException(status_code=422, detail="Could not extract any text from the uploaded file.")
 
         add_document_to_kb(file.filename, text, chunk_size, chunk_overlap)
+        
+        # Git Sync
+        git_success, git_err = sync_git_knowledge_base("add", file.filename)
+        warning = "" if git_success else f" (Warning: GitHub sync failed - {git_err})"
+        
         return {
             "success": True,
-            "message": f"'{file.filename}' ingested successfully.",
+            "message": f"'{file.filename}' ingested successfully.{warning}",
             "chunks": len(text) // chunk_size + 1
         }
     except HTTPException:
@@ -213,7 +245,12 @@ def admin_delete_kb_file(filename: str, admin: User = Depends(get_current_admin_
     success = delete_document(filename)
     if not success:
         raise HTTPException(status_code=404, detail=f"File '{filename}' not found in knowledge base.")
-    return {"success": True, "message": f"'{filename}' removed from knowledge base."}
+        
+    # Git Sync
+    git_success, git_err = sync_git_knowledge_base("rm", filename)
+    warning = "" if git_success else f" (Warning: GitHub sync failed - {git_err})"
+    
+    return {"success": True, "message": f"'{filename}' removed from knowledge base.{warning}"}
 
 
 @router.delete("/api/library/admin/knowledge-base")
