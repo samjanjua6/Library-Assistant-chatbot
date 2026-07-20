@@ -22,6 +22,8 @@ function KnowledgeBaseManager() {
   const [uploading, setUploading] = useState(false)
   const [statusMsg, setStatusMsg] = useState(null) // { type: 'success'|'error', text }
   const [isDragging, setIsDragging] = useState(false)
+  const [chunkSize, setChunkSize] = useState(1000)
+  const [chunkOverlap, setChunkOverlap] = useState(200)
   const fileRef = useRef()
   const token = localStorage.getItem('zylo_token')
   const headers = { Authorization: `Bearer ${token}` }
@@ -46,8 +48,8 @@ function KnowledgeBaseManager() {
     for (const file of files) {
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('chunk_size', '1000')
-      fd.append('chunk_overlap', '200')
+      fd.append('chunk_size', chunkSize)
+      fd.append('chunk_overlap', chunkOverlap)
       try {
         const res = await fetch('/api/library/admin/knowledge-base/upload', {
           method: 'POST', headers, body: fd
@@ -143,6 +145,39 @@ function KnowledgeBaseManager() {
             <p className="text-xs text-[var(--text-2)]">PDF · TXT · MD · DOCX · CSV · JSON · XLSX</p>
           </div>
         )}
+      </div>
+
+      {/* Chunking Configuration */}
+      <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-[var(--glass-hi)] border border-[var(--border)]">
+        <div className="col-span-2">
+          <p className="text-xs font-semibold text-fuchsia-400 uppercase tracking-wide mb-2">Chunking Settings</p>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--text-2)] flex items-center gap-1">
+            Chunk Size
+            <span className="text-[10px] text-[var(--text-2)] opacity-60">(characters)</span>
+          </label>
+          <input
+            type="number" min="100" max="4000" step="100"
+            value={chunkSize}
+            onChange={e => setChunkSize(parseInt(e.target.value))}
+            className="bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fuchsia-500 transition-colors"
+          />
+          <p className="text-[10px] text-[var(--text-2)] opacity-60">How many characters per chunk. Smaller = more precise, larger = more context.</p>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--text-2)] flex items-center gap-1">
+            Chunk Overlap
+            <span className="text-[10px] text-[var(--text-2)] opacity-60">(characters)</span>
+          </label>
+          <input
+            type="number" min="0" max="500" step="50"
+            value={chunkOverlap}
+            onChange={e => setChunkOverlap(parseInt(e.target.value))}
+            className="bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fuchsia-500 transition-colors"
+          />
+          <p className="text-[10px] text-[var(--text-2)] opacity-60">How many characters overlap between chunks. Helps maintain context at boundaries.</p>
+        </div>
       </div>
 
       {/* Document list */}
