@@ -219,7 +219,7 @@ async def stream_reply(
     total_completion_tokens = 0
 
     # Track knowledge base retrieval data for Precision/Recall evaluation
-    kb_eval_data: dict = {"question": user_message, "chunks": [], "error": None}
+    kb_eval_data: dict = {"question": user_message, "chunks": []}
 
     MAX_TOOL_LOOPS = 5
     for loop_idx in range(MAX_TOOL_LOOPS):
@@ -333,10 +333,8 @@ async def stream_reply(
                         result_data = json.loads(result_json)
                         if result_data.get("status") == "success":
                             kb_eval_data["chunks"] = result_data.get("results", [])
-                        else:
-                            kb_eval_data["error"] = result_data.get("message", "Unknown search error")
-                    except Exception as e:
-                        kb_eval_data["error"] = f"JSON parsing error from search tool: {e}"
+                    except Exception:
+                        pass
                 # ─────────────────────────────────────────────────────────
 
                 messages.append({
@@ -356,7 +354,7 @@ async def stream_reply(
     print(f"[Cerebras Usage] Model: gemma-4-31b (Estimated) | Prompt Tokens: {total_prompt_tokens} | Completion Tokens: {total_completion_tokens} | Cost: ${cost:.8f}")
 
     # ── Precision / Recall Evaluation ─────────────────────────────────────────
-    metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"], internal_error=kb_eval_data["error"])
+    metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"])
     yield f"[METRICS:{json.dumps(metrics)}]"
     # ──────────────────────────────────────────────────────────────────────────
 
