@@ -1,0 +1,52 @@
+# Zylo Library — Reading Programs & Community Events
+
+## Summer Reading Challenge
+
+Every year from June to August, Zylo Library runs the Summer Reading Challenge. Participants track their reading and earn badges for every 5 books they complete. Top readers at the end of the summer are featured in the library's "Hall of Readers."
+
+To join, simply register your account and start borrowing books during the summer period.
+
+## Book Club
+
+The Zylo Book Club meets virtually every second Saturday at 3:00 PM. Each month, a new book is selected by member vote and discussed in a group chat session. All members are welcome.
+
+How to join:
+- Register on the Zylo platform
+- Express interest in the Book Club via the chat assistant
+- You will be added to the next session
+
+Current Book Club selection: Rotating monthly — ask the assistant for the current pick.
+
+## Author Spotlight Series
+
+Once a month, Zylo Library features a deep-dive into a specific author's catalog. The AI assistant is updated with additional knowledge about the author's biography, themes, and recommended reading order.
+
+Past spotlights have included authors in the genres of Science Fiction, Classic Literature, and Contemporary Fiction.
+
+## Reading Challenges by Genre
+
+In addition to the Summer Challenge, genre-specific reading challenges run throughout the year:
+
+- **Sci-Fi January** — Read 3 science fiction books in January
+- **Mystery March** — A mystery book a week for the month of March
+- **Biography May** — Explore real lives with one biography per week
+
+Ask the assistant to recommend books for any active reading challenge.
+
+## New Arrivals
+
+New books are added to the catalog regularly. Ask the assistant "What are the newest books in the catalog?" to see the most recently added titles.
+
+## Recommendations
+
+The AI assistant can recommend books based on:
+- Your past reading history
+- Your preferred genre
+- Books similar to ones you've enjoyed
+- Bestseller and critically-acclaimed lists
+
+Ask "Can you recommend a good thriller?" or "What should I read next if I liked Dune?"
+
+## For Schools and Classrooms
+
+Zylo Library partners with schools to provide classroom reading lists. Teachers can request bulk borrowing privileges for approved educational reading. Contact an administrator to set up an institutional account.

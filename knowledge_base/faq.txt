@@ -1,0 +1,42 @@
+# Zylo Library — Frequently Asked Questions (FAQ)
+
+## General
+
+**Q: What is Zylo Library Assistant?**
+A: Zylo is an AI-powered library management system that lets you search the catalog, borrow books, return books, and get answers to library-related questions through a natural chat interface.
+
+**Q: How do I borrow a book?**
+A: Simply tell the assistant which book you want to borrow by title or ID. For example, say "I want to borrow book #42" or "Borrow The Great Gatsby for me." The assistant will process your request instantly.
+
+**Q: How many books can I borrow at once?**
+A: Each user can borrow up to 3 books at a time. If you have reached your limit, you must return at least one book before borrowing another.
+
+**Q: How long can I keep a borrowed book?**
+A: Books can be borrowed for a maximum of 14 days. After 14 days, a late fee of $0.50 per day will be applied automatically.
+
+**Q: How do I return a book?**
+A: Tell the assistant you want to return a book. For example: "Return my copy of Dune" or "I'd like to return book #15." You can also return books from your Dashboard page.
+
+**Q: Can I renew my loan?**
+A: Yes! Tell the assistant "I'd like to renew my copy of [book title]." Renewals extend your loan by another 14 days. You may only renew once per loan.
+
+**Q: How do I check my current loans?**
+A: Ask the assistant "What books do I have borrowed?" or "Show me my active loans." You can also view your loans on your personal Dashboard.
+
+**Q: Is my data secure?**
+A: Yes. All accounts are protected with JWT (JSON Web Tokens) and bcrypt-hashed passwords. Google OAuth is also supported as a secure sign-in option.
+
+**Q: How do I create an account?**
+A: Click "Sign Up" on the login page, enter a username, email address, and a password (minimum 6 characters), and your account will be created immediately.
+
+**Q: I forgot my password — what should I do?**
+A: Currently, password resets must be handled by a library administrator. Please contact the admin team or use Google Sign-In if your email is linked to a Google account.
+
+**Q: Can I search for books by genre?**
+A: Yes! Ask the assistant "Show me Science Fiction books" or "Find books about history." The search covers titles, authors, and genres.
+
+**Q: What happens if I lose a book?**
+A: If a book is more than 30 days overdue, it is automatically flagged as "Lost." Your account will be charged the book's full replacement cost plus a $10.00 administrative fee.
+
+**Q: How do I contact the library?**
+A: Visit us during opening hours or contact an administrator through the admin panel.

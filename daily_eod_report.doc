@@ -1,0 +1,100 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><title>Daily EOD Report</title></head>
+<body style="font-family: Arial, sans-serif;">
+<h1 style="text-align: center;">Daily EOD Report</h1>
+<p style="text-align: center;"><b>19 July, 2026</b></p>
+<p>This report format is designed to align with the standard reporting requirements for software development at Zylo Technologies.</p>
+
+<h2>1. Daily Task Progress</h2>
+<p>Detail the specific development activities, GitHub commits, or documentation handled today.</p>
+
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <tr style="background-color: #f2f2f2;">
+    <th align="left">Task ID / Ticket</th>
+    <th align="left">Task Description</th>
+    <th align="left">Status</th>
+    <th align="left">Links / Commits</th>
+  </tr>
+  <tr>
+    <td><b>Task 1</b></td>
+    <td>Analysed Chunking Strategy. (Evaluated the tradeoffs between fixed-size, recursive character, sentence/paragraph, and semantic chunking.)</td>
+    <td>Completed</td>
+    <td><a href="https://github.com/samjanjua6/Library-Assistant-chatbot">Repository Link</a></td>
+  </tr>
+  <tr>
+    <td><b>Task 2</b></td>
+    <td>Embedding &amp; Matching Review and analyzed similarity metrics (cosine, dot product, Euclidean).</td>
+    <td>Completed</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 3</b></td>
+    <td>Assessed the deployment readiness and tradeoffs of pgvector against Pinecone, Chroma, and Qdrant.</td>
+    <td>Completed</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 4</b></td>
+    <td>Created a b2 Server on Azure (Ubuntu LTS 24.04)</td>
+    <td>Completed</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 5</b></td>
+    <td>Deploying my project on the server</td>
+    <td>In Progress</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 6</b></td>
+    <td>Integrated ChromaDB in the project.</td>
+    <td>Completed</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 7</b></td>
+    <td>Linked a knowledge base to make embeddings.</td>
+    <td>Completed</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 8</b></td>
+    <td>Added an Admin and Dashboard Panel</td>
+    <td>Completed</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><b>Task 9</b></td>
+    <td>Pushed Code to GitHub</td>
+    <td>Completed</td>
+    <td><a href="https://github.com/samjanjua6/Library-Assistant-chatbot">Repository Link</a></td>
+  </tr>
+</table>
+
+<h2>2. Blockers &amp; Challenges</h2>
+<p>List any technical difficulties or dependencies that hindered your progress today.</p>
+<ul>
+  <li>Faced Problems in understanding different vector Databases. Finally, I am able to understand through YouTube and ChatGPT.</li>
+</ul>
+
+<h2>3. Plan for Next Working Day</h2>
+<p>Outline your priorities for the next shift to ensure team synchronization.</p>
+<ul>
+  <li>I will consult with my mentor for further instructions.</li>
+  <li>I will complete deploy my project.</li>
+</ul>
+
+<h2>4. Activity Screenshots &amp; Proof of Work</h2>
+<p>As per the recent meeting guidelines, please attach visual evidence of your daily activities (e.g., terminal output, Git logs, or UI updates) below.</p>
+<ul>
+  <li><b>Screenshot 1:</b> [Insert Screenshot Here]</li>
+  <li><b>Screenshot 2:</b> [Insert Screenshot Here]</li>
+  <li><b>Screenshot 3:</b> [Insert Screenshot Here]</li>
+  <li><b>Screenshot 4:</b> [Insert Screenshot Here]</li>
+  <li><b>Screenshot 5:</b> [Insert Screenshot Here]</li>
+</ul>
+
+<hr>
+<p><i>Note: This report should be submitted daily as part of the ClickUp task requirements.</i></p>
+</body>
+</html>

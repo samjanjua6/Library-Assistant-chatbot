@@ -1,0 +1,53 @@
+# Zylo Library — Membership Guide
+
+## How to Register
+
+New members can register directly on the Zylo platform:
+1. Go to the login page at mychatbot.codes/login
+2. Click "Sign Up" to open the registration form
+3. Enter your desired username (minimum 3 characters, maximum 50 characters)
+4. Enter your email address — this must be a valid, unique email
+5. Create a password (minimum 6 characters)
+6. Click "Create Account" — you will be automatically logged in
+
+Alternatively, you can sign in with your Google account using the "Continue with Google" button for a quick, password-free setup.
+
+## Membership Tiers
+
+### Standard Member (Default)
+- Borrow up to 3 books at a time
+- 14-day loan period per book
+- 1 renewal per loan
+- Access to the full digital catalog of 1,000+ books
+- Chat with the AI Library Assistant
+- Personal Dashboard with loan history
+
+### Administrator
+- All Standard Member privileges
+- Access to the Admin Panel
+- Manage the full book catalog (add, edit inventory)
+- View all active loans across all users
+- Manage user accounts and assign/revoke admin roles
+- Upload documents to the AI knowledge base
+- Monitor usage statistics
+
+Administrators are appointed by existing administrators through the Admin Panel.
+
+## Account Management
+
+### Updating Your Profile
+Currently, username and email updates must be requested from an administrator. Password changes are handled directly in your account settings.
+
+### Deleting Your Account
+To request account deletion, please speak to a library administrator.
+
+### Linking Google Account
+If you signed up with a username/password, you can still use "Continue with Google" to sign in as long as the email matches your registered email address.
+
+## Student Membership
+
+Students at affiliated institutions receive the same Standard membership benefits. If your institution has a partnership with Zylo Library, contact an administrator to have your account verified and upgraded.
+
+## Library Card (Digital)
+
+Every registered user receives a digital library card, which is their user account in the Zylo system. There is no physical card required.

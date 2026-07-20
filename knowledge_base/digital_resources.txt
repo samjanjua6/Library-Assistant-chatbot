@@ -1,0 +1,69 @@
+# Zylo Library — Digital Resources & Online Services
+
+## Digital Catalog
+
+Zylo Library maintains a digital catalog of over 1,000 books spanning more than 20 genres. The full catalog is searchable through the AI Library Assistant. Key genres available include:
+
+- Classic Literature
+- Science Fiction
+- Fantasy
+- Mystery & Thriller
+- Biography & Memoir
+- History
+- Science & Technology
+- Philosophy
+- Psychology
+- Self-Help & Productivity
+- Romance
+- Children's Books
+- Young Adult
+- Horror
+- Travel & Adventure
+
+## AI-Powered Catalog Search
+
+Our AI Library Assistant can search the catalog using natural language. Examples of search queries:
+
+- "Find me books by J.R.R. Tolkien"
+- "Do you have any books about machine learning?"
+- "Show me available mystery novels"
+- "What Sci-Fi books do you have?"
+- "Is there a copy of '1984' available?"
+
+## Online Account Dashboard
+
+Every registered member has access to a personal dashboard at /dashboard. From the dashboard you can:
+
+- View your current active loans
+- See due dates for each borrowed book
+- Return books with a single click
+- Browse featured books
+- Track your reading history
+
+## Borrowing via the AI Chat
+
+You can borrow and return books entirely through the chat interface without ever needing to visit the library. Just tell the assistant:
+
+- "Borrow [book title]"
+- "Return [book title]"
+- "What books do I currently have?"
+
+## eBook Resources (Coming Soon)
+
+We are working on integrating digital eBook lending so members can download eBooks directly to their devices. This feature will be available in a future update.
+
+## Accessibility
+
+Our platform is designed with accessibility in mind:
+- Full keyboard navigation support
+- Screen reader compatible
+- Light and Dark theme toggle
+- Mobile-responsive design for access on any device
+
+## System Status
+
+The Zylo Library platform runs on a cloud-hosted Azure virtual machine with 99% uptime. The AI assistant is powered by Cerebras-accelerated Llama language models, providing ultra-fast response times.
+
+## API Access
+
+Developers and researchers interested in integrating with the Zylo Library API can view the full API documentation at: /docs (FastAPI auto-generated Swagger UI).

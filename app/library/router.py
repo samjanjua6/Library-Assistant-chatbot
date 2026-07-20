@@ -5,13 +5,19 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+import shutil
+from pathlib import Path
 
 from ..core.database import get_db
 from ..core.deps import get_current_user, get_current_admin_user
 from ..users.model import User
 from .model import Book, Loan
 from .service import return_book, ReturnBookArgs
-from .rag import add_document_to_kb, clear_knowledge_base
+from .rag import (
+    add_document_to_kb, delete_document, list_documents,
+    clear_knowledge_base, extract_text, KNOWLEDGE_BASE_DIR, SUPPORTED_EXTENSIONS
+)
+
 router = APIRouter(tags=["Library"])
 
 # --- Pydantic Schemas for Requests/Responses ---
@@ -140,6 +146,15 @@ def admin_get_all_loans(db: Session = Depends(get_db), admin: User = Depends(get
         })
     return results
 
+
+# ── Knowledge Base Endpoints ──────────────────────────────────────────────────
+
+@router.get("/api/library/admin/knowledge-base")
+def admin_list_kb(admin: User = Depends(get_current_admin_user)):
+    """List all documents in the knowledge base."""
+    return {"documents": list_documents()}
+
+
 @router.post("/api/library/admin/knowledge-base/upload")
 async def admin_upload_kb(
     file: UploadFile = File(...),
@@ -147,36 +162,61 @@ async def admin_upload_kb(
     chunk_overlap: int = Form(200),
     admin: User = Depends(get_current_admin_user)
 ):
-    """Upload a document to the knowledge base with dynamic chunking."""
-    if not (file.filename.endswith(".txt") or file.filename.endswith(".pdf")):
-        raise HTTPException(status_code=400, detail="Only .txt and .pdf files are supported.")
-    
-    content = await file.read()
-    
-    if file.filename.endswith(".pdf"):
-        import io
-        from pypdf import PdfReader
-        pdf_file = io.BytesIO(content)
-        reader = PdfReader(pdf_file)
-        text = ""
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-    else:
-        text = content.decode("utf-8")
-    
+    """
+    Upload any supported document to the knowledge base and ingest it into ChromaDB.
+    Supported: .txt, .pdf, .md, .docx, .csv, .json, .xlsx
+    """
+    ext = Path(file.filename).suffix.lower() if file.filename else ""
+    if ext not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
+        )
+
+    # Save file to knowledge_base directory
+    dest = KNOWLEDGE_BASE_DIR / file.filename
     try:
-        add_document_to_kb(file.filename, text, chunk_size, chunk_overlap)
-        return {"success": True, "message": f"Successfully ingested {file.filename}"}
+        contents = await file.read()
+        with open(dest, "wb") as f:
+            f.write(contents)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
+
+    # Extract text and ingest
+    try:
+        text = extract_text(dest)
+        if not text.strip():
+            dest.unlink(missing_ok=True)
+            raise HTTPException(status_code=422, detail="Could not extract any text from the uploaded file.")
+
+        add_document_to_kb(file.filename, text, chunk_size, chunk_overlap)
+        return {
+            "success": True,
+            "message": f"'{file.filename}' ingested successfully.",
+            "chunks": len(text) // chunk_size + 1
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        dest.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/api/library/admin/knowledge-base/file/{filename}")
+def admin_delete_kb_file(filename: str, admin: User = Depends(get_current_admin_user)):
+    """Delete a specific document from the knowledge base by filename."""
+    success = delete_document(filename)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"File '{filename}' not found in knowledge base.")
+    return {"success": True, "message": f"'{filename}' removed from knowledge base."}
+
 
 @router.delete("/api/library/admin/knowledge-base")
 def admin_clear_kb(admin: User = Depends(get_current_admin_user)):
-    """Clear the knowledge base."""
+    """Clear all documents from the knowledge base ChromaDB collection."""
     try:
         clear_knowledge_base()
         return {"success": True, "message": "Knowledge base cleared."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

@@ -10,3 +10,6 @@ groq>=0.11.0
 openai
 chromadb
 pypdf
+python-multipart
+python-docx
+openpyxl

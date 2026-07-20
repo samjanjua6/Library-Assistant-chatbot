@@ -1,0 +1,66 @@
+# Zylo Library — Complete Borrowing Policies & Procedures
+
+## Borrowing Limits
+
+- Standard members may have a maximum of 3 active loans at any given time.
+- A book is considered "active" from the moment it is borrowed until it is returned.
+- To borrow a 4th book, at least one currently borrowed book must be returned first.
+
+## Loan Duration
+
+- The standard loan period is 14 days from the date of borrowing.
+- The due date is automatically calculated and displayed in your Dashboard and when requested through the AI assistant.
+
+## Renewals
+
+- Each loan may be renewed once, extending the due date by an additional 14 days.
+- Renewals must be requested before the original due date.
+- Books that are already overdue cannot be renewed.
+- To renew, ask the assistant: "Renew my loan for [book title]."
+
+## Late Fees
+
+- A late fee of $0.50 per day is charged for each day a book is overdue.
+- Late fees begin accumulating the day after the due date.
+- Fees are tracked on the user's account and must be settled before new books can be borrowed.
+- The maximum late fee for a single book is capped at the book's replacement cost.
+
+## Lost Books
+
+- A book is considered "Lost" if it has not been returned within 30 days of its due date.
+- The user's account will be charged the full replacement cost of the lost book.
+- An additional administrative processing fee of $10.00 will be applied for each lost book.
+- Lost book charges must be cleared before the account can be used again.
+
+## Damaged Books
+
+- Books must be returned in the same condition as they were borrowed.
+- Damage includes: water damage, torn pages, broken spines, writing/highlighting, missing covers.
+- Damage assessment is made by library staff upon return.
+- Minor damage: discretionary repair fee up to $5.00.
+- Severe damage or complete destruction: full replacement cost plus $10.00 processing fee.
+
+## Reserved Books
+
+- If a book you want is currently unavailable (all copies are borrowed), you may ask the assistant to notify you when a copy becomes available.
+- Reservations are fulfilled in the order they were placed.
+
+## Inter-Library Requests
+
+- If a specific title is not in our catalog, members may submit a purchase request.
+- Contact an administrator to submit a catalog addition request.
+
+## Account Suspension
+
+Accounts may be suspended in the following cases:
+- Outstanding late fees exceeding $20.00.
+- Two or more lost book charges.
+- Violation of the library's community conduct standards.
+
+Suspended accounts lose borrowing privileges until the outstanding balance is cleared and the matter is reviewed by an administrator.
+
+## Privacy Policy
+
+- Member borrowing history is private and is only accessible to the member and administrators.
+- Data is stored securely and never shared with third parties.
+- All passwords are stored as cryptographic hashes (bcrypt) and are never recoverable.

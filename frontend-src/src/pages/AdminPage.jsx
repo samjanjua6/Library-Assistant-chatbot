@@ -1,5 +1,190 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+
+const FILE_TYPE_COLORS = {
+  PDF: 'bg-red-500/20 text-red-300',
+  TXT: 'bg-sky-500/20 text-sky-300',
+  MD:  'bg-violet-500/20 text-violet-300',
+  DOCX:'bg-blue-500/20 text-blue-300',
+  CSV: 'bg-emerald-500/20 text-emerald-300',
+  JSON:'bg-amber-500/20 text-amber-300',
+  XLSX:'bg-green-500/20 text-green-300',
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / 1048576).toFixed(1) + ' MB'
+}
+
+function KnowledgeBaseManager() {
+  const [docs, setDocs] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [statusMsg, setStatusMsg] = useState(null) // { type: 'success'|'error', text }
+  const [isDragging, setIsDragging] = useState(false)
+  const fileRef = useRef()
+  const token = localStorage.getItem('zylo_token')
+  const headers = { Authorization: `Bearer ${token}` }
+
+  const fetchDocs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/library/admin/knowledge-base', { headers })
+      if (res.ok) {
+        const data = await res.json()
+        setDocs(data.documents)
+      }
+    } catch (e) { /* silent */ }
+  }, [])
+
+  useEffect(() => { fetchDocs() }, [fetchDocs])
+
+  const handleUpload = async (files) => {
+    if (!files || files.length === 0) return
+    setUploading(true)
+    setStatusMsg(null)
+    const results = []
+    for (const file of files) {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('chunk_size', '1000')
+      fd.append('chunk_overlap', '200')
+      try {
+        const res = await fetch('/api/library/admin/knowledge-base/upload', {
+          method: 'POST', headers, body: fd
+        })
+        const data = await res.json()
+        if (res.ok) results.push({ ok: true, name: file.name, msg: data.message })
+        else results.push({ ok: false, name: file.name, msg: data.detail })
+      } catch (e) {
+        results.push({ ok: false, name: file.name, msg: e.message })
+      }
+    }
+    await fetchDocs()
+    setUploading(false)
+    const failed = results.filter(r => !r.ok)
+    if (failed.length === 0) {
+      setStatusMsg({ type: 'success', text: `✓ ${results.length} file(s) uploaded successfully!` })
+    } else {
+      setStatusMsg({ type: 'error', text: `${failed.length} file(s) failed: ${failed.map(f => f.name).join(', ')}` })
+    }
+    setTimeout(() => setStatusMsg(null), 5000)
+  }
+
+  const handleDelete = async (filename) => {
+    if (!window.confirm(`Delete "${filename}" from the knowledge base?`)) return
+    try {
+      const res = await fetch(`/api/library/admin/knowledge-base/file/${encodeURIComponent(filename)}`, {
+        method: 'DELETE', headers
+      })
+      if (res.ok) {
+        setDocs(d => d.filter(f => f.filename !== filename))
+        setStatusMsg({ type: 'success', text: `✓ "${filename}" deleted.` })
+        setTimeout(() => setStatusMsg(null), 3000)
+      }
+    } catch (e) { setStatusMsg({ type: 'error', text: e.message }) }
+  }
+
+  const handleClearAll = async () => {
+    if (!window.confirm('Clear the ENTIRE knowledge base? This cannot be undone.')) return
+    try {
+      await fetch('/api/library/admin/knowledge-base', { method: 'DELETE', headers })
+      setDocs([])
+      setStatusMsg({ type: 'success', text: '✓ Knowledge base cleared.' })
+      setTimeout(() => setStatusMsg(null), 3000)
+    } catch (e) { setStatusMsg({ type: 'error', text: e.message }) }
+  }
+
+  return (
+    <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col gap-4">
+      <h2 className="text-xl font-bold flex items-center gap-2">
+        <svg className="w-5 h-5 text-fuchsia-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Knowledge Base
+        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 font-normal">{docs.length} file{docs.length !== 1 ? 's' : ''}</span>
+      </h2>
+
+      {/* Status message */}
+      {statusMsg && (
+        <div className={`text-sm px-4 py-2 rounded-lg ${statusMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+          {statusMsg.text}
+        </div>
+      )}
+
+      {/* Drag-and-drop upload zone */}
+      <div
+        onClick={() => fileRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={e => { e.preventDefault(); setIsDragging(false); handleUpload(Array.from(e.dataTransfer.files)) }}
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
+          isDragging ? 'border-fuchsia-400 bg-fuchsia-500/10' : 'border-[var(--border)] hover:border-fuchsia-500/50 hover:bg-fuchsia-500/5'
+        } ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+      >
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept=".txt,.pdf,.md,.docx,.csv,.json,.xlsx"
+          className="hidden"
+          onChange={e => handleUpload(Array.from(e.target.files))}
+        />
+        {uploading ? (
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-fuchsia-400/30 border-t-fuchsia-400 rounded-full animate-spin" />
+            <p className="text-sm text-fuchsia-400 font-medium">Ingesting documents...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <svg className="w-10 h-10 text-fuchsia-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <p className="text-sm font-semibold text-[var(--text-1)]">Drop files here or click to browse</p>
+            <p className="text-xs text-[var(--text-2)]">PDF · TXT · MD · DOCX · CSV · JSON · XLSX</p>
+          </div>
+        )}
+      </div>
+
+      {/* Document list */}
+      {docs.length > 0 ? (
+        <div className="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
+          {docs.map(doc => (
+            <div key={doc.filename} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-hi)] border border-[var(--border)] group">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${FILE_TYPE_COLORS[doc.file_type] ?? 'bg-gray-500/20 text-gray-300'}`}>
+                {doc.file_type}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{doc.filename}</p>
+                <p className="text-xs text-[var(--text-2)]">{formatBytes(doc.size_bytes)}</p>
+              </div>
+              <button
+                onClick={() => handleDelete(doc.filename)}
+                className="shrink-0 p-1.5 rounded-lg text-[var(--text-2)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                title="Delete document"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-center text-[var(--text-2)] py-4">No documents in the knowledge base yet.</p>
+      )}
+
+      {docs.length > 0 && (
+        <button
+          onClick={handleClearAll}
+          className="mt-2 py-2.5 rounded-xl border border-rose-500/40 text-rose-400 hover:bg-rose-500 hover:text-white text-sm font-semibold transition-colors"
+        >
+          Clear All Documents
+        </button>
+      )}
+    </section>
+  )
+}
+
 
 export default function AdminPage() {
   const [books, setBooks] = useState([])
@@ -17,12 +202,6 @@ export default function AdminPage() {
   const [newAuthor, setNewAuthor] = useState('')
   const [newGenre, setNewGenre] = useState('')
   const [newTotalCopies, setNewTotalCopies] = useState(1)
-
-  // Knowledge Base state
-  const [kbFile, setKbFile] = useState(null)
-  const [chunkSize, setChunkSize] = useState(1000)
-  const [chunkOverlap, setChunkOverlap] = useState(200)
-  const [kbLoading, setKbLoading] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
@@ -147,52 +326,7 @@ export default function AdminPage() {
     navigate('/login')
   }
 
-  const handleUploadKB = async (e) => {
-    e.preventDefault()
-    if (!kbFile) return alert('Please select a .txt file first')
-    setKbLoading(true)
-    try {
-      const token = localStorage.getItem('zylo_token')
-      const formData = new FormData()
-      formData.append('file', kbFile)
-      formData.append('chunk_size', chunkSize)
-      formData.append('chunk_overlap', chunkOverlap)
-      
-      const res = await fetch('/api/library/admin/knowledge-base/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Failed to upload knowledge base')
-      alert(data.message)
-      setKbFile(null)
-    } catch (err) {
-      alert(err.message)
-    } finally {
-      setKbLoading(false)
-    }
-  }
 
-  const handleClearKB = async () => {
-    if (!window.confirm("Are you sure you want to clear the entire knowledge base? This action cannot be undone.")) return
-    
-    setKbLoading(true)
-    try {
-      const token = localStorage.getItem('zylo_token')
-      const res = await fetch('/api/library/admin/knowledge-base', {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Failed to clear knowledge base')
-      alert(data.message)
-    } catch (err) {
-      alert(err.message)
-    } finally {
-      setKbLoading(false)
-    }
-  }
 
   if (error === 'FORBIDDEN') {
     return (
@@ -341,41 +475,10 @@ export default function AdminPage() {
             )}
           </section>
 
+
           {/* Knowledge Base Section */}
-          <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-fuchsia-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-              Knowledge Base Management
-            </h2>
-            <form onSubmit={handleUploadKB} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div className="md:col-span-2">
-                <input 
-                  type="file" 
-                  accept=".txt,.pdf"
-                  onChange={e => setKbFile(e.target.files[0])} 
-                  className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-500/10 file:text-sky-400 hover:file:bg-sky-500/20"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-[var(--text-2)]">Chunk Size (chars):</label>
-                <input type="number" min="100" required value={chunkSize} onChange={e => setChunkSize(e.target.value)} className="bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-fuchsia-500 transition-colors" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-[var(--text-2)]">Chunk Overlap (chars):</label>
-                <input type="number" min="0" required value={chunkOverlap} onChange={e => setChunkOverlap(e.target.value)} className="bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-fuchsia-500 transition-colors" />
-              </div>
-              <button type="submit" disabled={kbLoading} className="md:col-span-2 py-3 mt-2 rounded-xl bg-fuchsia-500 hover:bg-fuchsia-400 disabled:opacity-50 text-white font-semibold transition-colors shadow-lg shadow-fuchsia-500/20">
-                {kbLoading ? 'Processing...' : 'Upload to Knowledge Base'}
-              </button>
-            </form>
-            <div className="border-t border-[var(--border)] pt-4 mt-2">
-              <button type="button" onClick={handleClearKB} disabled={kbLoading} className="w-full py-3 rounded-xl border border-rose-500/50 text-rose-400 hover:bg-rose-500 hover:text-white disabled:opacity-50 font-semibold transition-colors">
-                Clear Entire Knowledge Base
-              </button>
-            </div>
-          </section>
+          <KnowledgeBaseManager />
+
 
           {/* Manage Users Section */}
           <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col">
