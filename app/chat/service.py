@@ -378,12 +378,12 @@ async def stream_reply(
                 query = args.get("query", user_message)
                 
                 if name == "call_catalog_agent":
-                    yield "\n\n*[STATUS: Delegating to Catalog Agent...]*\n"
+                    yield "[STATUS:Delegating to Catalog Agent...]"
                     res_text = await run_catalog_agent(query, user_id)
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
                     
                 elif name == "call_policy_agent":
-                    yield "\n\n*[STATUS: Delegating to Policy Agent...]*\n"
+                    yield "[STATUS:Delegating to Policy Agent...]"
                     res_text, chunks = await run_policy_agent(query, user_id)
                     kb_eval_data["chunks"].extend(chunks)
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
