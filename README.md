@@ -1,96 +1,180 @@
-# Zylo English Learning AI — Chat & Tutor System
+# 📚 Library Assistant Chatbot
 
-A highly resilient, full-stack chatbot application featuring a **FastAPI backend** powered by **Groq AI (Llama 3.3 & Llama Guard)**, a PostgreSQL database, Google OAuth 2.0, and a premium **React + Tailwind CSS** frontend.
-
----
-
-## Key Features
-
-1.  **AI English Tutor Persona**: Programmed to provide patient, beginner-friendly explanations in structured, bullet-pointed formatting.
-2.  **Google OAuth 2.0 & JWT**: Supports traditional credentials as well as seamless Google Sign-in. Secures REST endpoints and WebSocket connections with signed JSON Web Tokens (JWT).
-3.  **Real-time Streaming WebSockets**: Streams response content token-by-token directly to the user bubble.
-4.  **Llama Guard Moderation**: Automatically filters user queries through Groq's `llama-guard-3-8b` safety classifier model before hitting the main LLM.
-5.  **Token Usage Dashboard**: Estimates prompt/completion token count and tracks API cost in real-time, toggled directly under bot response bubbles.
-6.  **Expontential Retry-with-Backoff**: Keeps connection requests stable using retry mechanisms with backoff and jitter during Groq rate limits (429) or timeouts.
-7.  **Persisted Theme System**: Clean default **Light Mode** (White canvas, Sky Blue and Sunshine Yellow brand highlights, Dark Blue-Gray text) and **Dark Mode** toggle stored in localStorage.
+A production-grade, full-stack AI chatbot for library management, powered by a **multi-agent orchestrator** architecture with **Cerebras AI (Gemma 4)**, **FastAPI**, **PostgreSQL**, **Google OAuth 2.0**, and a premium **React** frontend.
 
 ---
 
-## Directory Overview
+## ✨ Key Features
 
-```text
-zylo-fast-api/
-├── app/                        # FastAPI Backend Code
-│   ├── auth/                   # Traditional Login, Signup & Google OAuth Router
-│   ├── chat/                   # Prompts, WebSocket Router & LLM Logic
-│   ├── core/                   # DB Config, Security Utility, and Token Guards
-│   ├── users/                  # User DB Model & Profile Router
-│   └── main.py                 # App entry point (mounts SPA & API routes)
-├── frontend-src/               # React Frontend Source Code (Vite + Tailwind)
-│   ├── src/
-│   │   ├── components/         # Sidebar, MessageList, TopBar UI blocks
-│   │   ├── contexts/           # Light/Dark Theme Context
-│   │   ├── pages/              # Landing, Login, and Chat pages
-│   │   └── App.jsx             # React routing & Private guards
-│   └── vite.config.js          # Port proxies for dev
-├── frontend/
-│   └── dist/                   # Compiled static bundle files served by FastAPI
-└── requirements.txt
+1. **Multi-Agent Orchestrator**: A three-tier AI system — a routing Orchestrator delegates queries to two specialist sub-agents: the **Catalog Agent** (books, loans) and the **Policy Agent** (rules, fees, hours).
+2. **RAG-Powered Knowledge Base**: The Policy Agent uses Retrieval-Augmented Generation (RAG) with a chunked, vector-indexed knowledge base of library policy documents for accurate, grounded answers.
+3. **Real-time Streaming WebSockets**: Streams response tokens directly to the chat bubble as they are generated, with live status indicators when agents are being dispatched.
+4. **Catalog Management Tools**: The Catalog Agent can search books, check availability, borrow a book, return a book, and list a user's active loans — all via structured tool calls.
+5. **Langfuse Observability**: Full LLM tracing with `@observe` decorators typed as `agent` for the Agent Graph view. Tracks latency, token usage, and cost per sub-agent via the `langfuse.openai` auto-instrumentation wrapper.
+6. **RAG Evaluation Metrics**: Each Policy Agent response is evaluated for Precision, Recall, and F1 score against retrieved knowledge base chunks and streamed to the frontend.
+7. **Google OAuth 2.0 & JWT**: Supports both traditional email/password login and seamless Google Sign-In. All REST and WebSocket endpoints are secured with signed JSON Web Tokens.
+8. **Exponential Retry with Backoff**: All Cerebras API calls use automatic retries with jitter to gracefully handle rate limits (429) and timeouts.
+9. **Max-Hop Guardrail**: The orchestrator enforces a `MAX_ROUTING_HOPS = 3` cap to prevent runaway routing loops.
+10. **Docker Deployment**: Containerised with Docker Compose, fronted by Caddy as a reverse proxy with automatic HTTPS.
+
+---
+
+## 🏗️ Architecture
+
+```
+User Message (WebSocket)
+        │
+        ▼
+  ┌─────────────┐
+  │ Orchestrator │  ← routes, never answers directly
+  └──────┬──────┘
+         │
+    ┌────┴─────┐
+    │          │
+    ▼          ▼
+┌────────┐  ┌────────┐
+│Catalog │  │Policy  │
+│ Agent  │  │ Agent  │
+└───┬────┘  └───┬────┘
+    │            │
+    ▼            ▼
+DB Tools     RAG Search
+(Search,     (Vector KB
+Borrow,      + Gemma 4)
+Return...)
 ```
 
 ---
 
-## Setup & Local Installation
+## 📂 Directory Overview
+
+```text
+Library-Assistant-chatbot/
+├── app/
+│   ├── auth/               # Login, Signup & Google OAuth router
+│   ├── chat/               # WebSocket router, orchestrator, sub-agents, prompts
+│   ├── core/               # DB config, security utilities, JWT guards
+│   ├── library/            # Catalog tools, RAG engine, evaluator, document ingestion
+│   ├── users/              # User DB model & profile router
+│   └── main.py             # App entry point
+├── frontend-src/           # React frontend source (Vite)
+│   └── src/
+│       ├── components/     # Sidebar, MessageBubble, TopBar, etc.
+│       ├── contexts/       # Theme context
+│       └── pages/          # Landing, Login, Chat pages
+├── frontend/dist/          # Compiled static bundle served by FastAPI
+├── .github/workflows/      # GitHub Actions CI/CD pipeline for Azure deployment
+├── docker-compose.yml      # Docker Compose (web + Caddy)
+├── Dockerfile
+├── requirements.txt
+└── build.sh
+```
+
+---
+
+## ⚙️ Setup & Local Installation
 
 ### 1. Requirements
-*   Python 3.11+
-*   Node.js 18+ (for building React)
-*   PostgreSQL database running locally
+- Python 3.11+
+- Node.js 18+ (for building React)
+- PostgreSQL database
 
 ### 2. Backend Setup
-1.  Create and activate a virtual environment:
-    ```powershell
-    python -m venv .venv
-    .venv\Scripts\Activate.ps1
-    ```
-2.  Install requirements:
-    ```powershell
-    pip install -r requirements.txt
-    ```
-3.  Create your local `.env` file:
-    ```powershell
-    copy .env.example .env
-    ```
-4.  Fill in your API credentials:
-    *   `GROQ_API_KEY`: Groq Cloud API access key.
-    *   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: Credentials from Google Cloud Console.
-    *   `GOOGLE_REDIRECT_URI`: Set to `http://localhost:8000/auth/google/callback` for local development.
 
-### 3. Frontend Compilation
-1.  Navigate to the frontend source, install dependencies, and compile:
-    ```powershell
-    cd frontend-src
-    npm install
-    npm run build
-    cd ..
-    ```
-    *This creates the production assets in `frontend/dist/` for FastAPI to serve.*
+```powershell
+# Create and activate virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 
-### 4. Running the Server
-Run the Uvicorn server:
+# Install dependencies
+pip install -r requirements.txt
+
+# Create your .env file
+copy .env.example .env
+```
+
+Fill in your `.env` credentials:
+
+| Variable | Description |
+|---|---|
+| `GROQ_API_KEY` | Your Cerebras Cloud API key |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SECRET_KEY` | A random secret for JWT signing |
+| `GOOGLE_CLIENT_ID` | Google Cloud Console OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud Console OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/google/callback` for local dev |
+| `LANGFUSE_PUBLIC_KEY` | *(Optional)* Langfuse project public key |
+| `LANGFUSE_SECRET_KEY` | *(Optional)* Langfuse project secret key |
+| `LANGFUSE_BASE_URL` | *(Optional)* `https://cloud.langfuse.com` |
+
+> **Note:** Langfuse keys are optional. If not provided, tracing is gracefully disabled and the application runs normally.
+
+### 3. Frontend Build
+
+```powershell
+cd frontend-src
+npm install
+npm run build
+cd ..
+```
+
+*This compiles the React app into `frontend/dist/` which FastAPI serves as a static SPA.*
+
+### 4. Run the Server
+
 ```powershell
 uvicorn app.main:app --reload
 ```
-Open your browser and navigate to:
-*   **Landing Page**: `http://localhost:8000/`
-*   **Sign In / Sign Up**: `http://localhost:8000/login`
-*   **AI Chat Workspace**: `http://localhost:8000/chat`
-*   **Interactive API Docs (Swagger)**: `http://localhost:8000/docs`
+
+| URL | Description |
+|---|---|
+| `http://localhost:8000/` | Landing Page |
+| `http://localhost:8000/login` | Sign In / Sign Up |
+| `http://localhost:8000/chat` | AI Library Assistant |
+| `http://localhost:8000/docs` | Interactive Swagger API Docs |
 
 ---
 
-## Testing & Verification
-Tests use SQLite in-memory, avoiding the need for a live Postgres connection during verification:
+## 🐳 Docker Deployment
+
+```bash
+# Build and start all containers
+sudo docker compose up --build -d
+
+# Restart the app container
+sudo docker restart library-container
+```
+
+---
+
+## 🧪 Testing
+
 ```powershell
 pytest -v
 ```
+
+Tests use an in-memory SQLite database — no live PostgreSQL connection needed.
+
+---
+
+## 🔭 Observability with Langfuse
+
+When Langfuse keys are configured, every chat request produces a nested trace in your [Langfuse dashboard](https://cloud.langfuse.com):
+
+```
+orchestrator (agent)
+├── catalog_agent (agent)
+│   └── LLM call: gemma-4-31b (generation)
+│       └── search_books (tool)
+└── policy_agent (agent)
+    └── LLM call: gemma-4-31b (generation)
+        └── search_knowledge_base (tool)
+```
+
+This lets you compare cost, latency, and token usage **per sub-agent**, not just as a single total.
+
+---
+
+## 🔗 Links
+
+- **GitHub**: [samjanjua6/Library-Assistant-chatbot](https://github.com/samjanjua6/Library-Assistant-chatbot)
