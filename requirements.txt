@@ -13,3 +13,4 @@ pypdf
 python-multipart
 python-docx
 openpyxl
+langfuse>=2.0.0

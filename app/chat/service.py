@@ -4,9 +4,11 @@ import asyncio
 import random
 import json
 from typing import AsyncGenerator, Dict, Any
+from langfuse import observe
 
 # pyrefly: ignore [missing-import]
-from openai import AsyncOpenAI, RateLimitError, APITimeoutError, APIConnectionError, APIError
+from langfuse.openai import AsyncOpenAI
+from openai import RateLimitError, APITimeoutError, APIConnectionError, APIError
 
 from ..core.config import settings
 from .prompts import build_system_prompt
@@ -223,14 +225,14 @@ def execute_tool(name: str, args_json: str, user_id: int) -> str:
         return json.dumps({"status": "error", "message": str(e)})
 
 
-async def run_catalog_agent(query: str, user_id: int) -> tuple[str, int, int]:
-    """Agent specialized in catalog operations. Returns (response_text, prompt_tokens, completion_tokens)."""
+@observe(as_type="agent", name="catalog_agent")
+async def run_catalog_agent(query: str, user_id: int) -> str:
+    """Agent specialized in catalog operations. Returns response_text."""
     client = _client()
     messages = [
         {"role": "system", "content": "You are the Library Catalog Agent. Use your tools to search books, check availability, borrow, return, and list active loans to fulfill the user's request. Answer concisely."},
         {"role": "user", "content": query}
     ]
-    p_tokens, c_tokens = 0, 0
     for _ in range(3):
         try:
             resp = await call_with_retry(
@@ -243,29 +245,26 @@ async def run_catalog_agent(query: str, user_id: int) -> tuple[str, int, int]:
                 max_tokens=1024,
             )
             msg = resp.choices[0].message
-            p_tokens += resp.usage.prompt_tokens if resp.usage else 0
-            c_tokens += resp.usage.completion_tokens if resp.usage else 0
-            
             if msg.tool_calls:
                 messages.append(msg)
                 for tc in msg.tool_calls:
                     res = execute_tool(tc.function.name, tc.function.arguments, user_id)
                     messages.append({"role": "tool", "tool_call_id": tc.id, "content": res})
             else:
-                return msg.content or "Task complete.", p_tokens, c_tokens
+                return msg.content or "Task complete."
         except Exception as e:
-            return f"Catalog Agent Error: {e}", p_tokens, c_tokens
-    return "Catalog Agent max loops reached.", p_tokens, c_tokens
+            return f"Catalog Agent Error: {e}"
+    return "Catalog Agent max loops reached."
 
 
-async def run_policy_agent(query: str, user_id: int) -> tuple[str, list, int, int]:
-    """Agent specialized in policy/knowledge base. Returns (response_text, retrieved_chunks, prompt_tokens, completion_tokens)."""
+@observe(as_type="agent", name="policy_agent")
+async def run_policy_agent(query: str, user_id: int) -> tuple[str, list]:
+    """Agent specialized in policy/knowledge base. Returns (response_text, retrieved_chunks)."""
     client = _client()
     messages = [
         {"role": "system", "content": "You are the Policy Agent. Use your search_knowledge_base tool to answer the user's questions about library rules, fees, hours, etc. Answer concisely based only on retrieved context."},
         {"role": "user", "content": query}
     ]
-    p_tokens, c_tokens = 0, 0
     kb_chunks = []
     for _ in range(3):
         try:
@@ -279,9 +278,6 @@ async def run_policy_agent(query: str, user_id: int) -> tuple[str, list, int, in
                 max_tokens=1024,
             )
             msg = resp.choices[0].message
-            p_tokens += resp.usage.prompt_tokens if resp.usage else 0
-            c_tokens += resp.usage.completion_tokens if resp.usage else 0
-            
             if msg.tool_calls:
                 messages.append(msg)
                 for tc in msg.tool_calls:
@@ -295,12 +291,13 @@ async def run_policy_agent(query: str, user_id: int) -> tuple[str, list, int, in
                             pass
                     messages.append({"role": "tool", "tool_call_id": tc.id, "content": res})
             else:
-                return msg.content or "Task complete.", kb_chunks, p_tokens, c_tokens
+                return msg.content or "Task complete.", kb_chunks
         except Exception as e:
-            return f"Policy Agent Error: {e}", kb_chunks, p_tokens, c_tokens
-    return "Policy Agent max loops reached.", kb_chunks, p_tokens, c_tokens
+            return f"Policy Agent Error: {e}", kb_chunks
+    return "Policy Agent max loops reached.", kb_chunks
 
 
+@observe(as_type="agent", name="orchestrator")
 async def stream_reply(
     history: list[dict],
     user_message: str,
@@ -321,8 +318,6 @@ async def stream_reply(
     messages.extend(_to_groq_history(history))
     messages.append({"role": "user", "content": user_message})
 
-    total_prompt_tokens = 0
-    total_completion_tokens = 0
     kb_eval_data = {"question": user_message, "chunks": [], "error": None}
 
     MAX_ROUTING_HOPS = 3
@@ -366,11 +361,6 @@ async def stream_reply(
             yield f"\n\n[System Error: Stream failed: {e}]"
             break
             
-        loop_p = max(1, int(len(json.dumps(messages)) / 3.9))
-        loop_c = max(1, int(len(completion_text) / 3.9) + (len(json.dumps(tool_calls_buffer)) // 3.9))
-        total_prompt_tokens += loop_p
-        total_completion_tokens += loop_c
-        
         if tool_calls_buffer:
             tool_calls_list = []
             for idx in sorted(tool_calls_buffer.keys()):
@@ -389,17 +379,13 @@ async def stream_reply(
                 
                 if name == "call_catalog_agent":
                     yield "\n\n*[STATUS: Delegating to Catalog Agent...]*\n"
-                    res_text, p_tok, c_tok = await run_catalog_agent(query, user_id)
-                    total_prompt_tokens += p_tok
-                    total_completion_tokens += c_tok
+                    res_text = await run_catalog_agent(query, user_id)
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
                     
                 elif name == "call_policy_agent":
                     yield "\n\n*[STATUS: Delegating to Policy Agent...]*\n"
-                    res_text, chunks, p_tok, c_tok = await run_policy_agent(query, user_id)
+                    res_text, chunks = await run_policy_agent(query, user_id)
                     kb_eval_data["chunks"].extend(chunks)
-                    total_prompt_tokens += p_tok
-                    total_completion_tokens += c_tok
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
                 else:
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": f"Unknown agent: {name}"})
@@ -409,16 +395,10 @@ async def stream_reply(
     else:
         yield "\n\n[System Warning: Max routing hops reached. Orchestrator forced to stop.]"
 
-    cost = (total_prompt_tokens * 0.59 / 1_000_000) + (total_completion_tokens * 0.79 / 1_000_000)
-    print(f"[Cerebras Usage] Model: gemma-4-31b (Estimated) | Prompt Tokens: {total_prompt_tokens} | Completion Tokens: {total_completion_tokens} | Cost: ${cost:.8f}")
-
     # ── Precision / Recall Evaluation ─────────────────────────────────────────
     metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"])
     yield f"[METRICS:{json.dumps(metrics)}]"
     # ──────────────────────────────────────────────────────────────────────────
-
-    # Yield usage data as a metadata string to be picked up by the WebSocket
-    yield f"[USAGE:{{\"prompt_tokens\": {total_prompt_tokens}, \"completion_tokens\": {total_completion_tokens}, \"cost\": {cost:.8f}}}]"
 
 
 async def generate_chat_title(prompt: str) -> str:
