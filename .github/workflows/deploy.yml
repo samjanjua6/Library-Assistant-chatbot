@@ -67,19 +67,28 @@ jobs:
           sudo apt-get update && sudo apt-get install docker-compose -y
           
           if [ "$BRANCH_NAME" != "main" ]; then
+            # Get the exact docker network name used by the production container
+            PROD_NET=$(sudo docker inspect library-container -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' || echo "library-app_default")
+            
             # Modify docker-compose dynamically for staging
             sed -i '/caddy:/,$d' docker-compose.yml
             sed -i 's/library-container/library-container-v2/g' docker-compose.yml
             sed -i 's/library-data:/library-data-v2:/g' docker-compose.yml
-            sed -i '/container_name: library-container-v2/a\    ports:\n      - "8001:80"' docker-compose.yml
+            
+            # Attach to production network
+            echo -e "\nnetworks:\n  default:\n    external: true\n    name: $PROD_NET" >> docker-compose.yml
             
             # Update production Caddyfile and reload
             if ! grep -q "v2.mychatbot.codes" ~/library-app/Caddyfile; then
-              echo -e "\n\nv2.mychatbot.codes {\n    reverse_proxy 172.17.0.1:8001\n}" >> ~/library-app/Caddyfile
-              cd ~/library-app
-              sudo docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
-              cd $APP_DIR
+              echo -e "\n\nv2.mychatbot.codes {\n    reverse_proxy library-container-v2:80\n}" >> ~/library-app/Caddyfile
+            else
+              # Only replace reverse_proxy inside the v2.mychatbot.codes block, or just leave it since it's already there
+              sed -i '/v2.mychatbot.codes/,/}/ s/reverse_proxy.*/reverse_proxy library-container-v2:80/g' ~/library-app/Caddyfile
             fi
+            
+            cd ~/library-app
+            sudo docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
+            cd $APP_DIR
           fi
           
           sudo docker stop $CONTAINER_NAME || true
