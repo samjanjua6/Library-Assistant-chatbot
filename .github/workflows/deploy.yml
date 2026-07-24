@@ -61,8 +61,14 @@ jobs:
           
           unzip -o ~/deploy.zip -d $APP_DIR
           cd $APP_DIR
-          touch .env
-          if ! grep -q "DATABASE_URL=" .env; then echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; else sed -i 's|DATABASE_URL=.*|DATABASE_URL=sqlite:///./data/app.db|g' .env; fi
+          
+          if [ "$BRANCH_NAME" != "main" ] && [ -f ~/library-app/.env ]; then
+            # Copy production secrets to staging
+            cp ~/library-app/.env .env
+          else
+            touch .env
+            if ! grep -q "DATABASE_URL=" .env; then echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; else sed -i 's|DATABASE_URL=.*|DATABASE_URL=sqlite:///./data/app.db|g' .env; fi
+          fi
           
           sudo apt-get update && sudo apt-get install docker-compose -y
           
