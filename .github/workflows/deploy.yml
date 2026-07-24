@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - version2
 
 jobs:
   deploy:
@@ -48,12 +49,40 @@ jobs:
         port: 22
         command_timeout: 30m
         script: |
-          unzip -o ~/deploy.zip -d ~/library-app
-          cd ~/library-app
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          
+          if [ "$BRANCH_NAME" == "main" ]; then
+            APP_DIR="~/library-app"
+            CONTAINER_NAME="library-container"
+          else
+            APP_DIR="~/library-app-v2"
+            CONTAINER_NAME="library-container-v2"
+          fi
+          
+          unzip -o ~/deploy.zip -d $APP_DIR
+          cd $APP_DIR
           touch .env
           if ! grep -q "DATABASE_URL=" .env; then echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; else sed -i 's|DATABASE_URL=.*|DATABASE_URL=sqlite:///./data/app.db|g' .env; fi
+          
           sudo apt-get update && sudo apt-get install docker-compose -y
-          sudo docker stop library-container || true
-          sudo docker rm library-container || true
+          
+          if [ "$BRANCH_NAME" != "main" ]; then
+            # Modify docker-compose dynamically for staging
+            sed -i '/caddy:/,$d' docker-compose.yml
+            sed -i 's/library-container/library-container-v2/g' docker-compose.yml
+            sed -i 's/library-data:/library-data-v2:/g' docker-compose.yml
+            sed -i '/container_name: library-container-v2/a\    ports:\n      - "8001:80"' docker-compose.yml
+            
+            # Update production Caddyfile and reload
+            if ! grep -q "v2.mychatbot.codes" ~/library-app/Caddyfile; then
+              echo -e "\n\nv2.mychatbot.codes {\n    reverse_proxy 172.17.0.1:8001\n}" >> ~/library-app/Caddyfile
+              cd ~/library-app
+              sudo docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
+              cd $APP_DIR
+            fi
+          fi
+          
+          sudo docker stop $CONTAINER_NAME || true
+          sudo docker rm $CONTAINER_NAME || true
           sudo docker compose down || sudo docker-compose down || true
           sudo docker compose up -d --build || sudo docker-compose up -d --build
