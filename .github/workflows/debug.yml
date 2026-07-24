@@ -1,0 +1,25 @@
+name: Debug Staging Server
+on:
+  push:
+    branches:
+      - version2
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fetch Logs
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AZURE_HOST }}
+        username: ${{ secrets.AZURE_USERNAME }}
+        password: ${{ secrets.AZURE_PASSWORD }}
+        port: 22
+        script: |
+          echo "==== DOCKER PS ===="
+          sudo docker ps -a
+          
+          echo "==== CONTAINER LOGS ===="
+          sudo docker logs library-container-v2 --tail 100 || true
+          
+          echo "==== SYSTEM MEMORY ===="
+          free -h
