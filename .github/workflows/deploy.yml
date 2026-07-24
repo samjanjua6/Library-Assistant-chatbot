@@ -48,56 +48,85 @@ jobs:
         password: ${{ secrets.AZURE_PASSWORD }}
         port: 22
         command_timeout: 30m
+        envs: GITHUB_REF
         script: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Deploying branch: $BRANCH_NAME"
           
-          if [ "$BRANCH_NAME" == "main" ]; then
-            APP_DIR="~/library-app"
+          if [ "$BRANCH_NAME" = "main" ]; then
+            APP_DIR=~/library-app
             CONTAINER_NAME="library-container"
           else
-            APP_DIR="~/library-app-v2"
+            APP_DIR=~/library-app-v2
             CONTAINER_NAME="library-container-v2"
           fi
+          
+          echo "APP_DIR=$APP_DIR  CONTAINER_NAME=$CONTAINER_NAME"
           
           unzip -o ~/deploy.zip -d $APP_DIR
           cd $APP_DIR
           
+          # Copy secrets: for staging, reuse production .env; for main, ensure DATABASE_URL exists
           if [ "$BRANCH_NAME" != "main" ] && [ -f ~/library-app/.env ]; then
-            # Copy production secrets to staging
             cp ~/library-app/.env .env
           else
             touch .env
-            if ! grep -q "DATABASE_URL=" .env; then echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; else sed -i 's|DATABASE_URL=.*|DATABASE_URL=sqlite:///./data/app.db|g' .env; fi
+            if ! grep -q "DATABASE_URL=" .env; then
+              echo "DATABASE_URL=sqlite:///./data/app.db" >> .env
+            fi
           fi
           
           sudo apt-get update && sudo apt-get install docker-compose -y
           
+          # For staging: create a separate docker-compose override file instead of modifying the original
           if [ "$BRANCH_NAME" != "main" ]; then
-            # Get the exact docker network name used by the production container
-            PROD_NET=$(sudo docker inspect library-container -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' || echo "library-app_default")
+            # Create a clean staging docker-compose file
+            cat > docker-compose.override.yml <<'EOF'
+          version: '3.8'
+          services:
+            web:
+              container_name: library-container-v2
+              volumes:
+                - /home/shaheer/library-data-v2:/app/data
+          EOF
             
-            # Modify docker-compose dynamically for staging
-            sed -i '/caddy:/,$d' docker-compose.yml
-            sed -i 's/library-container/library-container-v2/g' docker-compose.yml
-            sed -i 's/library-data:/library-data-v2:/g' docker-compose.yml
+            # Stop the old staging container if running
+            sudo docker stop $CONTAINER_NAME || true
+            sudo docker rm $CONTAINER_NAME || true
+            sudo docker compose -f docker-compose.yml -f docker-compose.override.yml down || true
             
-            # Attach to production network
-            echo -e "\nnetworks:\n  default:\n    external: true\n    name: $PROD_NET" >> docker-compose.yml
+            # Start only the web service (no caddy) with the override
+            sudo docker compose -f docker-compose.yml -f docker-compose.override.yml up -d --build web
             
-            # Update production Caddyfile and reload
-            if ! grep -q "v2.mychatbot.codes" ~/library-app/Caddyfile; then
-              echo -e "\n\nv2.mychatbot.codes {\n    reverse_proxy library-container-v2:80\n}" >> ~/library-app/Caddyfile
-            else
-              # Only replace reverse_proxy inside the v2.mychatbot.codes block, or just leave it since it's already there
-              sed -i '/v2.mychatbot.codes/,/}/ s/reverse_proxy.*/reverse_proxy library-container-v2:80/g' ~/library-app/Caddyfile
+            # Get the network this staging container is on
+            STAGING_NET=$(sudo docker inspect $CONTAINER_NAME -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' || echo "")
+            
+            # Get the network the production caddy is on
+            PROD_NET=$(sudo docker inspect caddy -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' || echo "")
+            
+            # Connect the staging container to the production network so Caddy can reach it
+            if [ -n "$PROD_NET" ] && [ "$STAGING_NET" != "$PROD_NET" ]; then
+              sudo docker network connect $PROD_NET $CONTAINER_NAME || true
             fi
             
+            # Update production Caddyfile to route v2.mychatbot.codes to the staging container
+            if ! grep -q "v2.mychatbot.codes" ~/library-app/Caddyfile; then
+              echo "" >> ~/library-app/Caddyfile
+              echo "v2.mychatbot.codes {" >> ~/library-app/Caddyfile
+              echo "    reverse_proxy library-container-v2:80" >> ~/library-app/Caddyfile
+              echo "}" >> ~/library-app/Caddyfile
+            fi
+            
+            # Reload Caddy AFTER the staging container is running
             cd ~/library-app
             sudo docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
-            cd $APP_DIR
+            
+          else
+            # Main branch: standard deployment
+            sudo docker stop $CONTAINER_NAME || true
+            sudo docker rm $CONTAINER_NAME || true
+            sudo docker compose down || sudo docker-compose down || true
+            sudo docker compose up -d --build || sudo docker-compose up -d --build
           fi
           
-          sudo docker stop $CONTAINER_NAME || true
-          sudo docker rm $CONTAINER_NAME || true
-          sudo docker compose down || sudo docker-compose down || true
-          sudo docker compose up -d --build || sudo docker-compose up -d --build
+          echo "Deployment complete for branch: $BRANCH_NAME"
