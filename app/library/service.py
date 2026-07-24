@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from .model import Book, Loan
+from .model import Book, Loan, Hold
 from ..core.database import SessionLocal
 
 
@@ -28,6 +28,12 @@ class ReturnBookArgs(BaseModel):
 class GetBorrowedBooksArgs(BaseModel):
     user_id: int = Field(..., description="The ID of the user whose borrowed books to retrieve")
 
+class PlaceHoldArgs(BaseModel):
+    user_id: int = Field(..., description="The ID of the user placing the hold")
+    book_id: int = Field(..., description="The ID of the book to hold")
+
+class GetMyHoldsArgs(BaseModel):
+    user_id: int = Field(..., description="The ID of the user whose holds to retrieve")
 
 # --- Plain Python Functions (Tool Implementations) ---
 
@@ -103,19 +109,29 @@ def borrow_book(args: BorrowBookArgs) -> str:
                 "reason": "User has already borrowed this book and has not returned it yet."
             })
 
-        # Check stock
+        # Check stock and holds
         book = db.query(Book).filter(Book.id == args.book_id).first()
         if not book:
             return json.dumps({"status": "error", "message": "Book not found."})
             
-        if book.available_copies <= 0:
-            return json.dumps({
-                "status": "failure",
-                "reason": f"No available copies for '{book.title}'."
-            })
-            
-        # Execute borrow
-        book.available_copies -= 1
+        ready_hold = db.query(Hold).filter(
+            Hold.user_id == args.user_id,
+            Hold.book_id == args.book_id,
+            Hold.status == "ready"
+        ).first()
+
+        if ready_hold:
+            # Consume the hold
+            ready_hold.status = "fulfilled"
+            # We don't decrement available_copies because it was reserved for this hold
+        else:
+            if book.available_copies <= 0:
+                return json.dumps({
+                    "status": "failure",
+                    "reason": f"No available copies for '{book.title}'."
+                })
+            # Execute normal borrow
+            book.available_copies -= 1
         
         due_date = datetime.utcnow() + timedelta(days=14)
         new_loan = Loan(
@@ -160,7 +176,17 @@ def return_book(args: ReturnBookArgs) -> str:
         loan.status = "returned"
         loan.returned_at = datetime.utcnow()
         if book:
-            book.available_copies += 1
+            # Check for active holds
+            next_hold = db.query(Hold).filter(
+                Hold.book_id == book.id,
+                Hold.status == "active"
+            ).order_by(Hold.placed_at.asc()).first()
+
+            if next_hold:
+                next_hold.status = "ready"
+                # Do NOT increment available_copies, it is reserved for the hold
+            else:
+                book.available_copies += 1
             
         db.commit()
         return json.dumps({
@@ -194,6 +220,79 @@ def get_my_borrowed_books(args: GetBorrowedBooksArgs) -> str:
                 "borrowed_at": loan.borrowed_at.isoformat(),
                 "due_date": loan.due_date.isoformat()
             } for loan in loans
+        ]
+        
+        return json.dumps({"status": "success", "results": results})
+    finally:
+        db.close()
+
+
+def place_hold(args: PlaceHoldArgs) -> str:
+    """Place a hold on an unavailable book."""
+    db = SessionLocal()
+    try:
+        book = db.query(Book).filter(Book.id == args.book_id).first()
+        if not book:
+            return json.dumps({"status": "error", "message": "Book not found."})
+            
+        if book.available_copies > 0:
+            return json.dumps({
+                "status": "failure",
+                "reason": "Book is currently available. You can just borrow it instead of placing a hold."
+            })
+            
+        # Check if already holding
+        existing_hold = db.query(Hold).filter(
+            Hold.user_id == args.user_id,
+            Hold.book_id == args.book_id,
+            Hold.status.in_(["active", "ready"])
+        ).first()
+        
+        if existing_hold:
+            return json.dumps({
+                "status": "failure",
+                "reason": f"User already has a hold on this book (Status: {existing_hold.status})."
+            })
+            
+        new_hold = Hold(
+            book_id=book.id,
+            user_id=args.user_id,
+            status="active"
+        )
+        db.add(new_hold)
+        db.commit()
+        
+        return json.dumps({
+            "status": "success",
+            "message": f"Successfully placed a hold on '{book.title}'. You will be notified when it is ready."
+        })
+    except Exception as e:
+        db.rollback()
+        return json.dumps({"status": "error", "message": str(e)})
+    finally:
+        db.close()
+
+
+def get_my_holds(args: GetMyHoldsArgs) -> str:
+    """Get a list of active or ready holds for the user."""
+    db = SessionLocal()
+    try:
+        holds = db.query(Hold).filter(
+            Hold.user_id == args.user_id,
+            Hold.status.in_(["active", "ready"])
+        ).all()
+        
+        if not holds:
+            return json.dumps({"status": "success", "results": []})
+            
+        results = [
+            {
+                "hold_id": hold.id,
+                "book_id": hold.book_id,
+                "title": hold.book.title,
+                "status": hold.status,
+                "placed_at": hold.placed_at.isoformat()
+            } for hold in holds
         ]
         
         return json.dumps({"status": "success", "results": results})

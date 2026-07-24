@@ -17,7 +17,9 @@ from ..library.service import (
     check_availability, CheckAvailabilityArgs,
     borrow_book, BorrowBookArgs,
     return_book, ReturnBookArgs,
-    get_my_borrowed_books, GetBorrowedBooksArgs
+    get_my_borrowed_books, GetBorrowedBooksArgs,
+    place_hold, PlaceHoldArgs,
+    get_my_holds, GetMyHoldsArgs
 )
 from ..library.rag import search_knowledge_base
 from ..library.evaluator import evaluate_retrieval
@@ -178,6 +180,31 @@ CATALOG_TOOLS = [
                 "properties": {}
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "place_hold",
+            "description": "Place a hold on a book that is currently unavailable (0 copies).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "book_id": {"type": "integer"}
+                },
+                "required": ["book_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_my_holds",
+            "description": "Get a list of all active or ready book holds for the user.",
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
     }
 ]
 
@@ -217,6 +244,10 @@ def execute_tool(name: str, args_json: str, user_id: int) -> str:
             return return_book(ReturnBookArgs(user_id=user_id, book_id=args.get("book_id")))
         elif name == "get_my_borrowed_books":
             return get_my_borrowed_books(GetBorrowedBooksArgs(user_id=user_id))
+        elif name == "place_hold":
+            return place_hold(PlaceHoldArgs(user_id=user_id, book_id=args.get("book_id")))
+        elif name == "get_my_holds":
+            return get_my_holds(GetMyHoldsArgs(user_id=user_id))
         elif name == "search_knowledge_base":
             return search_knowledge_base(args.get("query", ""))
         else:
@@ -232,7 +263,7 @@ async def run_catalog_agent(query: str, user_id: int) -> str:
     messages = [
         {"role": "system", "content": (
             "You are the Library Catalog Agent for a real library system. "
-            "You can search books, check availability, borrow books, return books, and list active loans.\n\n"
+            "You can search books, check availability, borrow books, return books, list active loans, place holds on unavailable books, and list active holds.\n\n"
             "STRICT RULES — you must NEVER violate these:\n"
             "1. NEVER call return_book because a user CLAIMS they did not borrow a book or disputes a loan record. "
             "return_book must ONLY be called when the user explicitly says they are physically returning a book right now (e.g. 'I am returning this book', 'I want to return book X').\n"

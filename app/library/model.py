@@ -18,8 +18,9 @@ class Book(Base):
     available_copies = Column(Integer, default=1)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationship to loans
+    # Relationship to loans and holds
     loans = relationship("Loan", back_populates="book")
+    holds = relationship("Hold", back_populates="book")
 
 
 class Loan(Base):
@@ -34,4 +35,17 @@ class Loan(Base):
     status = Column(String, default="borrowed") # "borrowed" or "returned"
 
     book = relationship("Book", back_populates="loans")
+    user = relationship("User")
+
+
+class Hold(Base):
+    __tablename__ = "holds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    placed_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    status = Column(String, default="active") # "active", "ready", "fulfilled", "cancelled"
+
+    book = relationship("Book", back_populates="holds")
     user = relationship("User")
