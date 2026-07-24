@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from .model import Book, Loan
 from ..core.database import SessionLocal
-
+from langchain_core.tools import tool
 
 # --- Pydantic Models for Tools ---
 
@@ -31,17 +31,18 @@ class GetBorrowedBooksArgs(BaseModel):
 
 # --- Plain Python Functions (Tool Implementations) ---
 
-def search_books(args: SearchBooksArgs) -> str:
+@tool(args_schema=SearchBooksArgs)
+def search_books(query: str) -> str:
     """Search for books by title, author, or genre."""
     db = SessionLocal()
     try:
-        q = f"%{args.query}%"
+        q = f"%{query}%"
         books = db.query(Book).filter(
             (Book.title.ilike(q)) | (Book.author.ilike(q)) | (Book.genre.ilike(q))
         ).all()
         
         if not books:
-            return json.dumps({"status": "no_results", "message": f"No books found matching '{args.query}'."})
+            return json.dumps({"status": "no_results", "message": f"No books found matching '{query}'."})
         
         results = [
             {
@@ -56,11 +57,12 @@ def search_books(args: SearchBooksArgs) -> str:
         db.close()
 
 
-def check_availability(args: CheckAvailabilityArgs) -> str:
+@tool(args_schema=CheckAvailabilityArgs)
+def check_availability(book_id: int) -> str:
     """Check availability of a specific book by ID."""
     db = SessionLocal()
     try:
-        book = db.query(Book).filter(Book.id == args.book_id).first()
+        book = db.query(Book).filter(Book.id == book_id).first()
         if not book:
             return json.dumps({"status": "error", "message": "Book not found."})
         
@@ -74,13 +76,14 @@ def check_availability(args: CheckAvailabilityArgs) -> str:
         db.close()
 
 
-def borrow_book(args: BorrowBookArgs) -> str:
+@tool(args_schema=BorrowBookArgs)
+def borrow_book(user_id: int, book_id: int) -> str:
     """Borrow a book, enforcing max 3 active loans and available copy checks."""
     db = SessionLocal()
     try:
         # Check active loans limit
         active_loans_count = db.query(Loan).filter(
-            Loan.user_id == args.user_id,
+            Loan.user_id == user_id,
             Loan.status == "borrowed"
         ).count()
         
@@ -92,8 +95,8 @@ def borrow_book(args: BorrowBookArgs) -> str:
             
         # Check if user already borrowed this specific book
         existing_loan = db.query(Loan).filter(
-            Loan.user_id == args.user_id,
-            Loan.book_id == args.book_id,
+            Loan.user_id == user_id,
+            Loan.book_id == book_id,
             Loan.status == "borrowed"
         ).first()
         
@@ -104,7 +107,7 @@ def borrow_book(args: BorrowBookArgs) -> str:
             })
 
         # Check stock
-        book = db.query(Book).filter(Book.id == args.book_id).first()
+        book = db.query(Book).filter(Book.id == book_id).first()
         if not book:
             return json.dumps({"status": "error", "message": "Book not found."})
             
@@ -120,7 +123,7 @@ def borrow_book(args: BorrowBookArgs) -> str:
         due_date = datetime.utcnow() + timedelta(days=14)
         new_loan = Loan(
             book_id=book.id,
-            user_id=args.user_id,
+            user_id=user_id,
             due_date=due_date,
             status="borrowed"
         )
@@ -139,13 +142,14 @@ def borrow_book(args: BorrowBookArgs) -> str:
         db.close()
 
 
-def return_book(args: ReturnBookArgs) -> str:
+@tool(args_schema=ReturnBookArgs)
+def return_book(user_id: int, book_id: int) -> str:
     """Return a book by updating the loan and incrementing stock."""
     db = SessionLocal()
     try:
         loan = db.query(Loan).filter(
-            Loan.user_id == args.user_id,
-            Loan.book_id == args.book_id,
+            Loan.user_id == user_id,
+            Loan.book_id == book_id,
             Loan.status == "borrowed"
         ).first()
         
@@ -155,7 +159,7 @@ def return_book(args: ReturnBookArgs) -> str:
                 "reason": "Active loan for this book not found for the user."
             })
             
-        book = db.query(Book).filter(Book.id == args.book_id).first()
+        book = db.query(Book).filter(Book.id == book_id).first()
         
         loan.status = "returned"
         loan.returned_at = datetime.utcnow()
@@ -165,7 +169,7 @@ def return_book(args: ReturnBookArgs) -> str:
         db.commit()
         return json.dumps({
             "status": "success",
-            "message": f"Successfully returned book ID {args.book_id}."
+            "message": f"Successfully returned book ID {book_id}."
         })
     except Exception as e:
         db.rollback()
@@ -174,12 +178,13 @@ def return_book(args: ReturnBookArgs) -> str:
         db.close()
 
 
-def get_my_borrowed_books(args: GetBorrowedBooksArgs) -> str:
+@tool(args_schema=GetBorrowedBooksArgs)
+def get_my_borrowed_books(user_id: int) -> str:
     """Get a list of active loans for the user."""
     db = SessionLocal()
     try:
         loans = db.query(Loan).filter(
-            Loan.user_id == args.user_id,
+            Loan.user_id == user_id,
             Loan.status == "borrowed"
         ).all()
         

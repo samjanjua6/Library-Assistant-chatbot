@@ -14,3 +14,6 @@ python-multipart
 python-docx
 openpyxl
 langfuse>=2.0.0
+langchain
+langchain-openai
+langchain-core

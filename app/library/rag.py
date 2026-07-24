@@ -7,6 +7,7 @@ import shutil
 # pyrefly: ignore [missing-import]
 import chromadb
 from pathlib import Path
+from langchain_core.tools import tool
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -264,6 +265,7 @@ def clear_knowledge_base():
         collection.delete(ids=existing["ids"])
 
 
+@tool
 def search_knowledge_base(query: str, n_results: int = 3) -> str:
     """
     Search the library knowledge base for the given query.
