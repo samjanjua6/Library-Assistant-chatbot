@@ -7,7 +7,6 @@ import shutil
 # pyrefly: ignore [missing-import]
 import chromadb
 from pathlib import Path
-from langchain_core.tools import tool
 import hashlib
 import redis
 from ..core.config import settings
