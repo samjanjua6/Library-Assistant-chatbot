@@ -14,6 +14,21 @@ services:
     depends_on:
       - redis
 
+  arq-worker:
+    build: .
+    container_name: library-worker
+    restart: always
+    # Same image as web — different entrypoint: run ARQ worker instead of uvicorn
+    command: arq app.worker.worker.WorkerSettings
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - /home/shaheer/library-data:/app/data
+    depends_on:
+      - redis
+
   redis:
     image: redis:alpine
     container_name: library-redis

@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/auth/google/callback"
 
+    # Email / SMTP (for daily reports)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""          # Gmail app password (not your login password)
+    REPORT_EMAIL_TO: str = ""        # where to send the daily report
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
