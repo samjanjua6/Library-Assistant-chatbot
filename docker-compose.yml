@@ -9,6 +9,16 @@ services:
       - .env
     volumes:
       - /home/shaheer/library-data:/app/data
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: library-redis
+    restart: always
+    volumes:
+      - /home/shaheer/library-redis-data:/data
+    command: redis-server --appendonly yes
 
   caddy:
     image: caddy:latest

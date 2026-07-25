@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Override everything with a full DSN (used by tests via os.environ)
     DATABASE_URL: str = ""
 
+    # Redis connection (defaulting to localhost for dev, redis inside docker)
+    REDIS_URL: str = "redis://localhost:6379/0"
+
     # JWT
     SECRET_KEY: str = "dev-secret-key-change-in-production-use-32-plus-chars"
     ALGORITHM: str = "HS256"

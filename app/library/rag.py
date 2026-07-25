@@ -7,6 +7,10 @@ import shutil
 # pyrefly: ignore [missing-import]
 import chromadb
 from pathlib import Path
+from langchain_core.tools import tool
+import hashlib
+import redis
+from ..core.config import settings
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -24,6 +28,9 @@ chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
 
 # Get or create the collection
 collection = chroma_client.get_or_create_collection(name="library_knowledge_base")
+
+# Initialize Redis client
+redis_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
 
 # ── Text extractors ──────────────────────────────────────────────────────────
@@ -270,6 +277,23 @@ def search_knowledge_base(query: str, n_results: int = 3) -> str:
     Returns a JSON string containing the most relevant text passages.
     """
     try:
+        # Normalize the query
+        normalized_query = query.strip().lower()
+        
+        # Generate a cache key
+        query_hash = hashlib.sha256(normalized_query.encode('utf-8')).hexdigest()
+        cache_key = f"rag_cache:{query_hash}"
+        
+        # Check Redis cache
+        try:
+            cached_result = redis_client.get(cache_key)
+            if cached_result:
+                print(f"[Cache Hit] Returning cached result for query: '{query}'")
+                return cached_result
+        except Exception as redis_err:
+            print(f"[Redis Error] Failed to read from cache: {redis_err}")
+            
+        print(f"[Cache Miss] Querying ChromaDB for: '{query}'")
         results = collection.query(query_texts=[query], n_results=n_results)
 
         passages = []
@@ -281,9 +305,17 @@ def search_knowledge_base(query: str, n_results: int = 3) -> str:
                     passages.append({"source": source, "text": doc_text})
 
         if passages:
-            return json.dumps({"status": "success", "results": passages})
+            response_json = json.dumps({"status": "success", "results": passages})
         else:
-            return json.dumps({"status": "not_found", "message": "No relevant information found in the knowledge base."})
+            response_json = json.dumps({"status": "not_found", "message": "No relevant information found in the knowledge base."})
+            
+        # Store in Redis with TTL (e.g., 3600 seconds = 1 hour)
+        try:
+            redis_client.setex(cache_key, 3600, response_json)
+        except Exception as redis_err:
+            print(f"[Redis Error] Failed to write to cache: {redis_err}")
+            
+        return response_json
 
     except Exception as e:
         return json.dumps({"status": "error", "message": str(e)})
