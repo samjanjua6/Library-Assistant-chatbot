@@ -29,8 +29,25 @@ chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
 # Get or create the collection
 collection = chroma_client.get_or_create_collection(name="library_knowledge_base")
 
-# Initialize Redis client
-redis_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
+# Initialize Redis client lazily so a Redis outage never crashes the app
+_redis_client = None
+
+def get_redis() -> redis.Redis | None:
+    """Return a Redis client, or None if Redis is not reachable."""
+    global _redis_client
+    if _redis_client is not None:
+        return _redis_client
+    try:
+        client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=2)
+        client.ping()  # Verify the connection is actually alive
+        _redis_client = client
+        print(f"[Redis] Connected successfully to {settings.REDIS_URL}")
+        return _redis_client
+    except Exception as e:
+        print(f"[Redis] Could not connect ({e}). Caching disabled — falling back to ChromaDB.")
+        return None
+
+
 
 
 # ── Text extractors ──────────────────────────────────────────────────────────
@@ -284,14 +301,16 @@ def search_knowledge_base(query: str, n_results: int = 3) -> str:
         query_hash = hashlib.sha256(normalized_query.encode('utf-8')).hexdigest()
         cache_key = f"rag_cache:{query_hash}"
         
-        # Check Redis cache
-        try:
-            cached_result = redis_client.get(cache_key)
-            if cached_result:
-                print(f"[Cache Hit] Returning cached result for query: '{query}'")
-                return cached_result
-        except Exception as redis_err:
-            print(f"[Redis Error] Failed to read from cache: {redis_err}")
+        # Check Redis cache (get_redis() returns None if Redis is unavailable)
+        rc = get_redis()
+        if rc:
+            try:
+                cached_result = rc.get(cache_key)
+                if cached_result:
+                    print(f"[Cache Hit] Returning cached result for query: '{query}'")
+                    return cached_result
+            except Exception as redis_err:
+                print(f"[Redis Error] Failed to read from cache: {redis_err}")
             
         print(f"[Cache Miss] Querying ChromaDB for: '{query}'")
         results = collection.query(query_texts=[query], n_results=n_results)
@@ -310,10 +329,11 @@ def search_knowledge_base(query: str, n_results: int = 3) -> str:
             response_json = json.dumps({"status": "not_found", "message": "No relevant information found in the knowledge base."})
             
         # Store in Redis with TTL (e.g., 3600 seconds = 1 hour)
-        try:
-            redis_client.setex(cache_key, 3600, response_json)
-        except Exception as redis_err:
-            print(f"[Redis Error] Failed to write to cache: {redis_err}")
+        if rc:
+            try:
+                rc.setex(cache_key, 3600, response_json)
+            except Exception as redis_err:
+                print(f"[Redis Error] Failed to write to cache: {redis_err}")
             
         return response_json
 
