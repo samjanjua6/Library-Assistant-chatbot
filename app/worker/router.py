@@ -20,7 +20,7 @@ from arq.jobs import Job, JobStatus
 from ..core.deps import get_current_admin_user
 from ..users.model import User
 from .worker import _redis_settings_from_url
-from .tasks import _fetch_stats, _build_pdf
+from .tasks import _fetch_stats, _build_pdf, _send_email
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/admin", tags=["Admin - Reports"])
@@ -100,12 +100,18 @@ async def report_status(
 @router.get("/download-report", summary="Generate and download the daily PDF report instantly")
 async def download_report(admin: User = Depends(get_current_admin_user)):
     """
-    Builds the PDF report synchronously in memory and streams it
-    directly to the browser as a file download — no email, no queue.
+    Builds the PDF report synchronously in memory, sends it via email,
+    and streams it directly to the browser as a file download.
     """
     stats = _fetch_stats()
     pdf_bytes = _build_pdf(stats)
     filename = f"library_report_{stats['date'].replace(' ', '_').replace(',', '')}.pdf"
+
+    # Send the email in the background of the same request
+    try:
+        _send_email(pdf_bytes, stats["date"])
+    except Exception as exc:
+        logger.error(f"[Report] Manual download email failed: {exc}")
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
