@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""          # Gmail app password (not your login password)
+    SMTP_FROM: str = "library@mychatbot.codes"
     REPORT_EMAIL_TO: str = ""        # where to send the daily report
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

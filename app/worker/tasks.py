@@ -220,7 +220,7 @@ def _send_email(pdf_bytes: bytes, report_date: str) -> None:
         return
 
     msg = MIMEMultipart()
-    msg["From"] = settings.SMTP_USER
+    msg["From"] = settings.SMTP_FROM
     msg["To"] = settings.REPORT_EMAIL_TO
     msg["Subject"] = f"📚 Zylo Library Daily Report — {report_date}"
 
