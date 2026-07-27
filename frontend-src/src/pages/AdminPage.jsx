@@ -247,6 +247,118 @@ function KnowledgeBaseManager() {
 }
 
 
+function RedisDashboard() {
+  const [status, setStatus] = useState('loading')
+  const [totalKeys, setTotalKeys] = useState(0)
+  const [cacheKeys, setCacheKeys] = useState([])
+  const [confirmClear, setConfirmClear] = useState(false)
+  const [error, setError] = useState(null)
+
+  const fetchRedisStatus = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('zylo_token')
+      const res = await fetch('/api/admin/redis-status', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (res.ok) {
+        setStatus(data.status)
+        setTotalKeys(data.total_keys)
+        setCacheKeys(data.cache_keys || [])
+        setError(null)
+      } else {
+        setError(data.detail)
+      }
+    } catch (e) {
+      setError(e.message)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchRedisStatus()
+    const interval = setInterval(fetchRedisStatus, 10000) // Poll every 10s
+    return () => clearInterval(interval)
+  }, [fetchRedisStatus])
+
+  const handleClearCache = async () => {
+    try {
+      const token = localStorage.getItem('zylo_token')
+      const res = await fetch('/api/admin/redis/clear', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) {
+        fetchRedisStatus()
+      }
+    } catch (e) { /* ignore */ }
+    setConfirmClear(false)
+  }
+
+  return (
+    <>
+      <ConfirmModal
+        isOpen={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        onConfirm={handleClearCache}
+        title="Flush Redis Cache"
+        message="Are you sure you want to flush all RAG cache keys? Users will have to wait for full database searches until the cache repopulates."
+        confirmText="Flush Cache"
+      />
+      <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col gap-4">
+        <h2 className="text-xl font-bold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+            </svg>
+            Live Redis Cache
+          </div>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${status === 'online' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}>
+            <span className={`w-2 h-2 rounded-full ${status === 'online' ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`}></span>
+            {status === 'online' ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        </h2>
+
+        {error && <div className="text-rose-400 text-sm">{error}</div>}
+
+        <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-[var(--glass-hi)] border border-[var(--border)]">
+          <div>
+            <p className="text-xs text-[var(--text-2)] uppercase font-semibold">Total Keys</p>
+            <p className="text-2xl font-bold text-white">{totalKeys}</p>
+          </div>
+          <div>
+            <p className="text-xs text-[var(--text-2)] uppercase font-semibold">RAG Cache</p>
+            <p className="text-2xl font-bold text-white">{cacheKeys.length}</p>
+          </div>
+        </div>
+
+        {status === 'online' && (
+          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1 mt-2">
+            {cacheKeys.length > 0 ? (
+              cacheKeys.map(k => (
+                <div key={k.key} className="flex justify-between items-center px-4 py-2 rounded-xl bg-[var(--glass-hi)] border border-[var(--border)]">
+                  <div className="truncate flex-1">
+                    <p className="text-sm font-medium font-mono text-red-300 truncate" title={k.key}>{k.key}</p>
+                    <p className="text-xs text-[var(--text-2)]">Size: {formatBytes(k.size_bytes)}</p>
+                  </div>
+                  <div className="text-xs font-mono text-[var(--text-2)] shrink-0 ml-4">
+                    TTL: {k.ttl}s
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-center text-[var(--text-2)] py-4">No active cache keys found.</p>
+            )}
+          </div>
+        )}
+
+        {cacheKeys.length > 0 && (
+          <button
+            onClick={() => setConfirmClear(true)}
+            className="mt-2 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs font-semibold hover:bg-red-500 hover:text-white transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+          >
+            Flush RAG Cache
+          </button>
+        )}
+      </section>
+    </>
+  )
+}
+
 export default function AdminPage() {
   const [books, setBooks] = useState([])
   const [totalBooks, setTotalBooks] = useState(0)
@@ -587,6 +699,8 @@ export default function AdminPage() {
           {/* Knowledge Base Section */}
           <KnowledgeBaseManager />
 
+          {/* Redis Dashboard Section */}
+          <RedisDashboard />
 
           {/* Manage Users Section */}
           <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col">

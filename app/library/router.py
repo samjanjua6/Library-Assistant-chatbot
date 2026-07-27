@@ -15,9 +15,8 @@ from ..users.model import User
 from .model import Book, Loan
 from .service import return_book, ReturnBookArgs
 from .rag import (
-    add_document_to_kb, delete_document, list_documents,
     clear_knowledge_base, extract_text, KNOWLEDGE_BASE_DIR, PERSISTENT_KB_DIR, SUPPORTED_EXTENSIONS,
-    ingest_documents
+    ingest_documents, get_redis
 )
 
 class ReingestPayload(BaseModel):
@@ -277,3 +276,52 @@ def admin_reingest_kb(payload: ReingestPayload, admin: User = Depends(get_curren
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ── Redis Status Endpoints ────────────────────────────────────────────────────
+
+@router.get("/api/admin/redis-status")
+def admin_redis_status(admin: User = Depends(get_current_admin_user)):
+    """Fetch live status, total keys, and list of RAG cache keys from Redis."""
+    rc = get_redis()
+    if not rc:
+        return {"status": "offline", "total_keys": 0, "cache_keys": []}
+    
+    try:
+        rc.ping()
+        all_keys = rc.keys("*")
+        cache_keys = []
+        for key in all_keys:
+            if key.startswith("rag_cache:"):
+                # decode_responses=True means key is a string
+                ttl = rc.ttl(key)
+                val = rc.get(key)
+                size = len(val) if val else 0
+                cache_keys.append({
+                    "key": key,
+                    "ttl": ttl,
+                    "size_bytes": size
+                })
+        
+        return {
+            "status": "online",
+            "total_keys": len(all_keys),
+            "cache_keys": cache_keys
+        }
+    except Exception as e:
+        return {"status": "offline", "error": str(e), "total_keys": 0, "cache_keys": []}
+
+
+@router.delete("/api/admin/redis/clear")
+def admin_clear_redis_cache(admin: User = Depends(get_current_admin_user)):
+    """Flush all RAG cache keys from Redis."""
+    rc = get_redis()
+    if not rc:
+        raise HTTPException(status_code=500, detail="Redis is offline")
+    
+    try:
+        keys = rc.keys("rag_cache:*")
+        if keys:
+            rc.delete(*keys)
+        return {"success": True, "message": f"Cleared {len(keys)} cache keys."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
