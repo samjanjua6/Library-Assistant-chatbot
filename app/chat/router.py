@@ -396,6 +396,19 @@ async def chat_socket(
 
             retrieved_context = ""   # ← legacy param, kept for compat
 
+            # Refresh the active document from DB on every turn.
+            # This covers the sync-fallback path (Redis down) where active_document
+            # was never set via a [CHECK_DOC:] frame, and eliminates race conditions
+            # where the user sends a message immediately after the document becomes ready.
+            if chat_session and not active_document:
+                active_document = db.scalar(
+                    select(SessionDocument).where(
+                        SessionDocument.session_id == chat_session.id,
+                        SessionDocument.user_id == user.id,
+                        SessionDocument.status == "ready",
+                    ).order_by(SessionDocument.created_at.desc())
+                )
+
             # Stream the reply token-by-token
             full_reply = ""
             try:

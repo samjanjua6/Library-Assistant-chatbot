@@ -286,7 +286,9 @@ export default function ChatPage() {
           setUploadError(info.error_message || 'Processing failed.')
           if (docPollRef.current) clearInterval(docPollRef.current)
         } else {
-          setUploadStatus(info.status)
+          // 'pending' and 'processing' both show the spinner — 'pending' means
+          // the ARQ job hasn't been picked up yet, which is visually the same
+          setUploadStatus('processing')
         }
       } catch (e) { /* ignore */ }
       return
@@ -351,10 +353,14 @@ export default function ChatPage() {
       }
 
       const docId = data.document_id
-      // If the server already processed it synchronously (Redis down fallback)
+      // If the server already processed it synchronously (Redis down fallback),
+      // still notify the backend WebSocket so it sets active_document before
+      // the user sends their first question.
       if (data.status === 'ready') {
         setActiveDocumentId(docId)
         setUploadStatus('ready')
+        // One ping so the WS handler updates its active_document reference
+        setTimeout(() => send(`[CHECK_DOC:${docId}]`), 300)
         return
       }
 
