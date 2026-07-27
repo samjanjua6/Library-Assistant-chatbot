@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnimatedMeshBackground from '../components/AnimatedMeshBackground'
+import ConfirmModal from '../components/ConfirmModal'
 
 const FILE_TYPE_COLORS = {
   PDF: 'bg-red-500/20 text-red-300',
@@ -77,7 +78,6 @@ function KnowledgeBaseManager() {
   }
 
   const handleDelete = async (filename) => {
-    if (!window.confirm(`Delete "${filename}" from the knowledge base?`)) return
     try {
       const res = await fetch(`/api/library/admin/knowledge-base/file/${encodeURIComponent(filename)}`, {
         method: 'DELETE', headers
@@ -91,7 +91,6 @@ function KnowledgeBaseManager() {
   }
 
   const handleClearAll = async () => {
-    if (!window.confirm('Clear the ENTIRE knowledge base? This cannot be undone.')) return
     try {
       await fetch('/api/library/admin/knowledge-base', { method: 'DELETE', headers })
       setDocs([])
@@ -196,9 +195,9 @@ function KnowledgeBaseManager() {
                 <p className="text-sm font-medium truncate">{doc.filename}</p>
                 <p className="text-xs text-[var(--text-2)]">{formatBytes(doc.size_bytes)}</p>
               </div>
-              <button
-                onClick={() => handleDelete(doc.filename)}
-                className="shrink-0 p-1.5 rounded-lg text-[var(--text-2)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
+              <button 
+                onClick={() => setFileToDelete(doc.filename)}
+                className="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-md transition-colors border border-transparent hover:border-rose-500/30"
                 title="Delete document"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,11 +212,10 @@ function KnowledgeBaseManager() {
       )}
 
       {docs.length > 0 && (
-        <button
-          onClick={handleClearAll}
-          className="mt-2 py-2.5 rounded-xl border border-rose-500/40 text-rose-400 hover:bg-rose-500 hover:text-white text-sm font-semibold transition-colors"
-        >
-          Clear All Documents
+                  <button
+                    onClick={() => setConfirmClearAll(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500 hover:text-white transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                  >  Clear All Documents
         </button>
       )}
     </section>
@@ -235,6 +233,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reportDownloading, setReportDownloading] = useState(false)
+  const [fileToDelete, setFileToDelete] = useState(null)
+  const [confirmClearAll, setConfirmClearAll] = useState(false)
   const navigate = useNavigate()
 
   const handleDownloadReport = async () => {
@@ -414,7 +414,26 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen relative font-sans flex flex-col text-white">
+    <>
+      <ConfirmModal
+        isOpen={!!fileToDelete}
+        onClose={() => setFileToDelete(null)}
+        onConfirm={() => {
+          if (fileToDelete) handleDelete(fileToDelete)
+        }}
+        title="Delete Document"
+        message={`Are you sure you want to delete "${fileToDelete}" from the knowledge base?`}
+        confirmText="Delete"
+      />
+      <ConfirmModal
+        isOpen={confirmClearAll}
+        onClose={() => setConfirmClearAll(false)}
+        onConfirm={handleClearAll}
+        title="Clear Knowledge Base"
+        message="Are you sure you want to clear the ENTIRE knowledge base? This action cannot be undone."
+        confirmText="Clear All"
+      />
+      <div className="min-h-screen relative font-sans flex flex-col text-white">
       <AnimatedMeshBackground />
       <header className="relative z-20 px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-xl sticky top-0 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
@@ -658,5 +677,6 @@ export default function AdminPage() {
 
       </main>
     </div>
+    </>
   )
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import ConfirmModal from './ConfirmModal'
 
 export default function Sidebar({
   sessions,
@@ -11,6 +12,7 @@ export default function Sidebar({
   const [chunkSize, setChunkSize] = useState(() => Number(localStorage.getItem('zylo_chunk_size')) || 1000)
   const [chunkOverlap, setChunkOverlap] = useState(() => Number(localStorage.getItem('zylo_chunk_overlap')) || 200)
   const [isReingesting, setIsReingesting] = useState(false)
+  const [sessionToDelete, setSessionToDelete] = useState(null)
 
   useEffect(() => { localStorage.setItem('zylo_chunk_size', chunkSize) }, [chunkSize])
   useEffect(() => { localStorage.setItem('zylo_chunk_overlap', chunkOverlap) }, [chunkOverlap])
@@ -40,7 +42,18 @@ export default function Sidebar({
   }
 
   return (
-    <div
+    <>
+      <ConfirmModal
+        isOpen={!!sessionToDelete}
+        onClose={() => setSessionToDelete(null)}
+        onConfirm={() => {
+          if (sessionToDelete) onDeleteSession(sessionToDelete)
+        }}
+        title="Delete Chat"
+        message="Are you sure you want to delete this chat session? This action cannot be undone."
+        confirmText="Delete"
+      />
+      <div
       className="flex flex-col h-full shrink-0 transition-all duration-300 overflow-hidden"
       style={{
         width: isOpen ? '16rem' : '0px',
@@ -86,7 +99,7 @@ export default function Sidebar({
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  onDeleteSession(session.id)
+                  setSessionToDelete(session.id)
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 rounded-md hover:bg-red-500/10 text-red-400 transition-all duration-200"
                 title="Delete Chat"
@@ -150,5 +163,6 @@ export default function Sidebar({
         </div>
       </div>
     </div>
+    </>
   )
 }

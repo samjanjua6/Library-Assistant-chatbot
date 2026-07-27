@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import ThemeToggle from './ThemeToggle'
+import ConfirmModal from './ConfirmModal'
 
 const STATUS_CONFIG = {
   online:     { dot: 'bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.2)] animate-pulse', label: 'Connected' },
@@ -16,11 +18,21 @@ const SidebarIcon = () => (
 )
 
 export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, isSidebarOpen, onDashboard, onAdmin }) {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { dot, label } = STATUS_CONFIG[wsStatus] ?? STATUS_CONFIG.offline
   const initial = username.charAt(0).toUpperCase()
 
   return (
-    <header
+    <>
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={onLogout}
+        title="Sign Out"
+        message="Are you sure you want to sign out? You will need to log in again to access your account."
+        confirmText="Sign Out"
+      />
+      <header
       className="flex items-center gap-4 px-6 py-3.5 shrink-0"
       style={{
         background:    'var(--glass-bg)',
@@ -83,7 +95,7 @@ export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, 
         <span className="text-sm hidden sm:block" style={{ color: 'var(--text-1)' }}>{username}</span>
 
         <button
-          onClick={onLogout}
+          onClick={() => setShowLogoutConfirm(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
           style={{
             color:       'var(--text-2)',
@@ -102,5 +114,6 @@ export default function TopBar({ username, wsStatus, onLogout, onToggleSidebar, 
         </button>
       </div>
     </header>
+    </>
   )
 }
