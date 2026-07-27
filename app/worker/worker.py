@@ -6,7 +6,9 @@ For PRODUCTION: change to cron(generate_and_email_report, hour=7, minute=0)
 """
 from __future__ import annotations
 
+# pyrefly: ignore [missing-import]
 from arq import cron
+# pyrefly: ignore [missing-import]
 from arq.connections import RedisSettings
 
 from .tasks import generate_and_email_report
