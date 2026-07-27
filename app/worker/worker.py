@@ -14,6 +14,13 @@ from arq.connections import RedisSettings
 from .tasks import generate_and_email_report, process_session_document
 from ..core.config import settings
 
+# Import all models to ensure SQLAlchemy mapper registry is fully initialized
+# before the worker starts any tasks. This prevents InvalidRequestError
+# for string-based relationship() references.
+from ..users.model import User  # noqa: F401
+from ..chat.model import ChatSession, ChatMessage, SessionDocument  # noqa: F401
+from ..library.model import Book, Loan, Hold  # noqa: F401
+
 
 def _redis_settings_from_url() -> RedisSettings:
     """Parse REDIS_URL (e.g. redis://redis:6379/0) into an ARQ RedisSettings object."""
