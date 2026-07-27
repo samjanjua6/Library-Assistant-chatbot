@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import LoginForm from '../components/LoginForm'
 import SignupForm from '../components/SignupForm'
 import ThemeToggle from '../components/ThemeToggle'
+import AnimatedMeshBackground from '../components/AnimatedMeshBackground'
 
 const glass = {
-  background:    'var(--glass-bg)',
-  border:        '1px solid var(--border)',
+  background:    'rgba(255, 255, 255, 0.05)',
+  border:        '1px solid rgba(255, 255, 255, 0.2)',
   backdropFilter:'blur(24px)',
   WebkitBackdropFilter: 'blur(24px)',
-  boxShadow:     'var(--shadow)',
+  boxShadow:     'inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 32px rgba(0,0,0,0.5)',
 }
 
 function SegmentedControl({ mode, onChange }) {
@@ -97,7 +98,8 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans text-white">
+      <AnimatedMeshBackground />
       {/* Theme toggle (fixed top-right) */}
       <div className="fixed top-5 right-5 z-50">
         <ThemeToggle />
