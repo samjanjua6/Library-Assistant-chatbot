@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AnimatedMeshBackground from '../components/AnimatedMeshBackground'
 
 const FILE_TYPE_COLORS = {
   PDF: 'bg-red-500/20 text-red-300',
@@ -393,8 +394,9 @@ export default function AdminPage() {
 
   if (error === 'FORBIDDEN') {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-1)] font-sans flex flex-col items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[var(--glass-bg)] border border-[var(--border)] rounded-2xl p-8 text-center shadow-2xl">
+      <div className="min-h-screen relative font-sans flex flex-col items-center justify-center p-6 text-white">
+        <AnimatedMeshBackground />
+        <div className="max-w-md w-full relative z-10 bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-8 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]">
           <div className="text-6xl mb-6">🔒</div>
           <h1 className="text-2xl font-bold text-rose-400 mb-4">Restricted Access</h1>
           <p className="text-[var(--text-2)] mb-8">
@@ -412,8 +414,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-1)] font-sans flex flex-col">
-      <header className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center bg-[var(--glass-bg)] backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen relative font-sans flex flex-col text-white">
+      <AnimatedMeshBackground />
+      <header className="relative z-20 px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-xl sticky top-0 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
           Zylo Admin Panel
         </h1>
@@ -444,7 +447,7 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="flex-1 w-full mx-auto px-6 py-10 grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl">
+      <main className="relative z-10 flex-1 w-full mx-auto px-6 py-10 grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl">
         
         {/* Left Column: Manage Books & Add Book */}
         <div className="xl:col-span-2 flex flex-col gap-8">

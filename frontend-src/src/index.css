@@ -4,75 +4,66 @@
 
 /* ─── Theme token definitions ──────────────────────────────────────────────── */
 
-/* Light (default) */
+/* Light (default) now forces the premium dark glassmorphism look to match the Landing Page */
 :root {
-  --canvas:       #FFFFFF;
-  --mesh-a:       rgba(52, 152, 219, 0.15); /* Sky Blue #3498DB */
-  --mesh-b:       rgba(241, 196, 15, 0.10); /* Sunshine Yellow #F1C40F */
-  --mesh-c:       rgba(52, 73, 94, 0.08);   /* Dark Blue-Gray #34495E */
+  --canvas:       #020617; /* slate-950 */
+  --mesh-a:       transparent;
+  --mesh-b:       transparent;
+  --mesh-c:       transparent;
 
-  --glass-bg:     rgba(255, 255, 255, 0.70);
-  --glass-hi:     rgba(255, 255, 255, 0.90);
-  --glass-input:  rgba(52, 73, 94, 0.04);
+  --glass-bg:     rgba(255, 255, 255, 0.05);
+  --glass-hi:     rgba(255, 255, 255, 0.1);
+  --glass-input:  rgba(255, 255, 255, 0.03);
 
-  --border:       rgba(52, 73, 94, 0.12);
-  --border-s:     rgba(52, 73, 94, 0.06);
+  --border:       rgba(255, 255, 255, 0.2);
+  --border-s:     rgba(255, 255, 255, 0.1);
 
-  --text-1:       #34495E;
-  --text-2:       rgba(52, 73, 94, 0.70);
-  --text-3:       rgba(52, 73, 94, 0.40);
+  --text-1:       #FFFFFF;
+  --text-2:       rgba(255, 255, 255, 0.7);
+  --text-3:       rgba(255, 255, 255, 0.4);
 
-  --shadow:       0 8px 32px rgba(52, 152, 219, 0.08);
+  --shadow:       inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 32px rgba(0,0,0,0.5);
 
-  --pill-active:  rgba(52, 152, 219, 0.12);
+  --pill-active:  rgba(255, 255, 255, 0.1);
 }
 
-/* Dark (alternative) */
+/* Dark (alternative) uses the same premium look */
 [data-theme="dark"] {
-  --canvas:       #1A252F; /* Dark blue-gray base */
-  --mesh-a:       rgba(52, 152, 219, 0.20);
-  --mesh-b:       rgba(241, 196, 15, 0.12);
-  --mesh-c:       rgba(52, 73, 94, 0.15);
+  --canvas:       #020617;
+  --mesh-a:       transparent;
+  --mesh-b:       transparent;
+  --mesh-c:       transparent;
 
-  --glass-bg:     rgba(26, 37, 47, 0.50);
-  --glass-hi:     rgba(26, 37, 47, 0.80);
-  --glass-input:  rgba(0, 0, 0, 0.25);
+  --glass-bg:     rgba(255, 255, 255, 0.05);
+  --glass-hi:     rgba(255, 255, 255, 0.1);
+  --glass-input:  rgba(255, 255, 255, 0.03);
 
-  --border:       rgba(255, 255, 255, 0.08);
-  --border-s:     rgba(255, 255, 255, 0.04);
+  --border:       rgba(255, 255, 255, 0.2);
+  --border-s:     rgba(255, 255, 255, 0.1);
 
-  --text-1:       rgba(255, 255, 255, 0.95);
-  --text-2:       rgba(255, 255, 255, 0.60);
-  --text-3:       rgba(255, 255, 255, 0.35);
+  --text-1:       #FFFFFF;
+  --text-2:       rgba(255, 255, 255, 0.7);
+  --text-3:       rgba(255, 255, 255, 0.4);
 
-  --shadow:       0 8px 32px rgba(0, 0, 0, 0.30);
+  --shadow:       inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 32px rgba(0,0,0,0.5);
 
-  --pill-active:  rgba(52, 152, 219, 0.20);
+  --pill-active:  rgba(255, 255, 255, 0.1);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
 
 @layer base {
   html {
-    /* Smooth colour transitions when theme flips */
     transition: background-color 0.4s ease;
   }
 
   body {
-    background-color: var(--canvas);
+    background-color: transparent; /* Rely on layout wrappers for bg color */
     color: var(--text-1);
     min-height: 100svh;
-    /* Ambient mesh blobs via layered radial gradients */
-    background-image:
-      radial-gradient(ellipse 60% 50% at 10%  15%, var(--mesh-a), transparent),
-      radial-gradient(ellipse 55% 45% at 90%  80%, var(--mesh-b), transparent),
-      radial-gradient(ellipse 40% 60% at 55%  50%, var(--mesh-c), transparent);
-    background-attachment: fixed;
   }
 
-  /* Smooth border / bg transitions on all glass elements */
   * { transition: border-color 0.3s ease, background-color 0.3s ease, color 0.2s ease, box-shadow 0.3s ease; }
-  /* But don't apply to motion elements — Framer Motion handles those */
   [data-framer-component-type] { transition: none; }
 }
 

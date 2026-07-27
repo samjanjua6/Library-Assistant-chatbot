@@ -4,6 +4,7 @@ import TopBar from '../components/TopBar'
 import MessageList from '../components/MessageList'
 import ChatInput from '../components/ChatInput'
 import Sidebar from '../components/Sidebar'
+import AnimatedMeshBackground from '../components/AnimatedMeshBackground'
 
 const DONE_SENTINEL = '[DONE]'
 
@@ -321,7 +322,8 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden relative font-sans text-white">
+      <AnimatedMeshBackground />
       <TopBar 
         username={username} 
         wsStatus={wsStatus} 

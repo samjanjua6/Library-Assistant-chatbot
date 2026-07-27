@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AnimatedMeshBackground from '../components/AnimatedMeshBackground'
 
 export default function DashboardPage() {
   const [loans, setLoans] = useState([])
@@ -51,8 +52,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-1)] font-sans flex flex-col">
-      <header className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center bg-[var(--glass-bg)] backdrop-blur-md">
+    <div className="min-h-screen relative font-sans flex flex-col text-white">
+      <AnimatedMeshBackground />
+      <header className="relative z-20 px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-xl">
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">
           Zylo Dashboard
         </h1>
@@ -63,7 +65,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-10">
+      <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-10">
         <div className="mb-8">
           <h2 className="text-3xl font-semibold mb-2">My Active Loans</h2>
           <p className="text-[var(--text-2)]">Manage the books you are currently borrowing.</p>
@@ -78,7 +80,7 @@ export default function DashboardPage() {
             {error}
           </div>
         ) : loans.length === 0 ? (
-          <div className="text-center py-20 px-6 rounded-2xl bg-[var(--glass-bg)] border border-[var(--border)]">
+          <div className="text-center py-20 px-6 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]">
             <div className="text-6xl mb-4 opacity-50">📚</div>
             <h3 className="text-xl font-medium mb-2">No Active Loans</h3>
             <p className="text-[var(--text-2)] mb-6">You haven't borrowed any books yet.</p>
@@ -98,7 +100,7 @@ export default function DashboardPage() {
               const isLate = daysLeft < 0
 
               return (
-                <div key={loan.id} className="rounded-2xl p-6 flex flex-col gap-4 border border-[var(--border)] bg-[var(--glass-input)] shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div key={loan.id} className="rounded-3xl p-6 flex flex-col gap-4 border border-white/20 bg-white/5 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                   <div>
                     <h3 className="text-lg font-bold text-sky-100">{loan.title}</h3>
                     <p className="text-sm text-sky-400/80">by {loan.author}</p>
