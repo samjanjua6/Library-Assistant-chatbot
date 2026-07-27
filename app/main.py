@@ -17,6 +17,7 @@ from .chat.router import router as chat_router
 from .users.router import router as users_router
 from .library.router import router as library_router
 from .library.rag import ingest_documents
+from .worker.router import router as worker_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -36,6 +37,7 @@ app.include_router(google_router)
 app.include_router(chat_router)
 app.include_router(users_router)
 app.include_router(library_router)
+app.include_router(worker_router)
 
 # ── Static files ───────────────────────────────────────────────────────────────
 # The React + Vite SPA builds to frontend/dist/.

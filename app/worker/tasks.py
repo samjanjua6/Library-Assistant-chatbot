@@ -8,12 +8,16 @@ No file is written to disk at any point.
 from __future__ import annotations
 
 import io
+import os
 import smtplib
 import logging
 from datetime import datetime, timedelta, timezone
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+# pyrefly: ignore [missing-import]
+from arq import Retry
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -203,7 +207,14 @@ def _build_pdf(stats: dict) -> bytes:
 
 
 def _send_email(pdf_bytes: bytes, report_date: str) -> None:
-    """Send the PDF as an email attachment via SMTP."""
+    """Send the PDF as an email attachment via SMTP.
+
+    Set env var BREAK_EMAIL_FOR_TESTING=true to deliberately raise an error
+    so you can confirm the retry logic works without touching real SMTP.
+    """
+    if os.environ.get("BREAK_EMAIL_FOR_TESTING", "").lower() == "true":
+        raise RuntimeError("BREAK_EMAIL_FOR_TESTING is enabled — simulated email failure.")
+
     if not settings.SMTP_USER or not settings.REPORT_EMAIL_TO:
         logger.warning("[Report] SMTP_USER or REPORT_EMAIL_TO not set — skipping email.")
         return
@@ -235,14 +246,24 @@ def _send_email(pdf_bytes: bytes, report_date: str) -> None:
 
 # ── ARQ Task ─────────────────────────────────────────────────────────────────
 
+MAX_RETRIES = 3
+RETRY_DEFER_SECONDS = 30   # wait 30 s between retries
+
+
 async def generate_and_email_report(ctx: dict) -> str:
     """
     ARQ task: fetch stats, build PDF in memory, email it.
-    ctx is the ARQ context dict (contains redis connection etc.).
-    """
-    logger.info("[Report] Task started: fetching stats...")
-    stats = _fetch_stats()
 
+    Retry logic:
+      ctx['job_try'] == 1  on the first attempt
+      ctx['job_try'] == 2  on the first retry  (after Retry() was raised)
+      ctx['job_try'] == 3  on the second retry
+      After MAX_RETRIES attempts the job is marked failed.
+    """
+    job_try: int = ctx.get("job_try", 1)
+    logger.info(f"[Report] Attempt {job_try}/{MAX_RETRIES} — fetching stats...")
+
+    stats = _fetch_stats()
     logger.info(
         f"[Report] Stats — borrows: {len(stats['new_borrows'])}, "
         f"returns: {len(stats['returns'])}, overdue: {len(stats['overdue'])}"
@@ -252,8 +273,22 @@ async def generate_and_email_report(ctx: dict) -> str:
     pdf_bytes = _build_pdf(stats)
     logger.info(f"[Report] PDF built — {len(pdf_bytes):,} bytes")
 
-    logger.info("[Report] Sending email...")
-    _send_email(pdf_bytes, stats["date"])
+    logger.info(f"[Report] Sending email (attempt {job_try})...")
+    try:
+        _send_email(pdf_bytes, stats["date"])
+    except Exception as exc:
+        if job_try < MAX_RETRIES:
+            logger.warning(
+                f"[Report] Email failed on attempt {job_try} — {exc}. "
+                f"Retrying in {RETRY_DEFER_SECONDS}s "
+                f"({MAX_RETRIES - job_try} attempt(s) left)."
+            )
+            raise Retry(defer=RETRY_DEFER_SECONDS)
+        # All retries exhausted — log and re-raise so ARQ marks job as failed
+        logger.error(
+            f"[Report] Email FAILED after {MAX_RETRIES} attempts — {exc}. Giving up."
+        )
+        raise
 
     result = (
         f"Report for {stats['date']}: "
