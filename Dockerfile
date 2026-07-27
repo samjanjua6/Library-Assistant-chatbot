@@ -9,6 +9,7 @@ WORKDIR /app
 # Install system dependencies (needed for compiling some python packages like chromadb/sqlite)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies

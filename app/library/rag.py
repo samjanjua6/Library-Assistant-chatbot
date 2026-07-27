@@ -342,6 +342,149 @@ def clear_knowledge_base():
         rebuild_bm25_index()
 
 
+# ── Session-Scoped Document RAG ───────────────────────────────────────────────
+
+# Directory for per-session uploads (created lazily)
+SESSION_UPLOADS_DIR = DATA_DIR / "session_uploads"
+SESSION_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def ingest_session_document(
+    document_id: int,
+    session_id: int,
+    user_id: int,
+    filename: str,
+    file_path: Path,
+    chunk_size: int = 1000,
+    chunk_overlap: int = 200,
+) -> int:
+    """
+    Extract text from *file_path*, chunk it, and upsert into ChromaDB with
+    full scoping metadata (document_id, session_id, user_id).
+
+    Chunk IDs are prefixed ``sess_{session_id}_doc_{document_id}_`` so they
+    are namespaced away from global-KB chunks and can be bulk-deleted later.
+
+    Returns the number of chunks ingested.
+    Does NOT touch the global BM25 index.
+    """
+    content = extract_text(file_path)
+    if not content.strip():
+        raise ValueError(f"No text could be extracted from '{filename}'.")
+
+    chunks = sliding_window_chunker(content, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+    documents: list[str] = []
+    metadatas: list[dict] = []
+    ids: list[str] = []
+
+    ext = file_path.suffix.lower()
+    prefix = f"sess_{session_id}_doc_{document_id}"
+
+    for i, chunk in enumerate(chunks):
+        if not chunk.strip():
+            continue
+        documents.append(chunk)
+        metadatas.append({
+            "source": filename,
+            "chunk_index": i,
+            "file_type": ext,
+            # Scoping keys — used as ChromaDB where-filters at query time
+            "document_id": str(document_id),
+            "session_id": str(session_id),
+            "user_id": str(user_id),
+            "scope": "session_doc",        # differentiates from global KB chunks
+        })
+        ids.append(f"{prefix}_{i}")
+
+    if documents:
+        collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
+        print(f"[RAG] Session doc {document_id}: ingested {len(documents)} chunks from '{filename}'.")
+
+    return len(documents)
+
+
+def search_session_document(
+    query: str,
+    session_id: int,
+    document_id: int,
+    n_results: int = 5,
+) -> str:
+    """
+    Vector-only retrieval scoped to a specific session document.
+
+    Uses ChromaDB's metadata ``where`` filter so results are strictly
+    isolated to the given document — no cross-session or global-KB bleed.
+    BM25 is intentionally skipped because the in-memory global index cannot
+    be filtered by metadata.
+
+    Returns a JSON string identical in shape to ``search_knowledge_base``.
+    """
+    try:
+        where_filter = {
+            "$and": [
+                {"session_id": {"$eq": str(session_id)}},
+                {"document_id": {"$eq": str(document_id)}},
+                {"scope": {"$eq": "session_doc"}},
+            ]
+        }
+
+        results = collection.query(
+            query_texts=[query],
+            n_results=n_results,
+            where=where_filter,
+        )
+
+        passages = []
+        if results and results["documents"] and results["documents"][0]:
+            for i, doc_text in enumerate(results["documents"][0]):
+                meta = results["metadatas"][0][i]
+                distance = results["distances"][0][i] if results.get("distances") else 2.0
+                if distance < 1.8:   # slightly more permissive threshold for user docs
+                    chunk_idx = meta.get("chunk_index", i)
+                    passages.append({
+                        "source": meta.get("source", "uploaded file"),
+                        "section": f"section {chunk_idx + 1}",
+                        "text": doc_text,
+                    })
+
+        if passages:
+            return json.dumps({"status": "success", "results": passages})
+        return json.dumps({
+            "status": "not_found",
+            "message": "No relevant information found in the uploaded document.",
+        })
+
+    except Exception as e:
+        return json.dumps({"status": "error", "message": str(e)})
+
+
+def delete_session_document_chunks(document_id: int, session_id: int) -> int:
+    """
+    Remove all ChromaDB chunks that belong to a specific session document.
+    Returns the number of chunks deleted.
+    """
+    try:
+        existing = collection.get(
+            where={
+                "$and": [
+                    {"document_id": {"$eq": str(document_id)}},
+                    {"session_id": {"$eq": str(session_id)}},
+                    {"scope": {"$eq": "session_doc"}},
+                ]
+            }
+        )
+        if existing and existing["ids"]:
+            collection.delete(ids=existing["ids"])
+            count = len(existing["ids"])
+            print(f"[RAG] Deleted {count} chunks for session doc {document_id}.")
+            return count
+        return 0
+    except Exception as e:
+        print(f"[RAG] Warning: Could not delete chunks for doc {document_id}: {e}")
+        return 0
+
+
 def search_knowledge_base(query: str, n_results: int = 3) -> str:
     """
     Search the library knowledge base for the given query.

@@ -18,3 +18,4 @@ python-docx
 openpyxl
 langfuse>=2.0.0
 rank-bm25
+python-magic

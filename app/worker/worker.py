@@ -11,7 +11,7 @@ from arq import cron
 # pyrefly: ignore [missing-import]
 from arq.connections import RedisSettings
 
-from .tasks import generate_and_email_report
+from .tasks import generate_and_email_report, process_session_document
 from ..core.config import settings
 
 
@@ -38,7 +38,7 @@ class WorkerSettings:
     TESTING MODE  : fires every minute (minute=None means "every minute")
     PRODUCTION    : change the cron line below to hour=7, minute=0
     """
-    functions = [generate_and_email_report]
+    functions = [generate_and_email_report, process_session_document]
 
     # ── TESTING: fires every minute ──────────────────────────────────────────
     # cron_jobs = [

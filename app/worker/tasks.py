@@ -299,3 +299,93 @@ async def generate_and_email_report(ctx: dict) -> str:
     )
     logger.info(f"[Report] Done — {result}")
     return result
+
+
+# ── Session Document Ingestion Job ────────────────────────────────────────────
+
+async def process_session_document(
+    ctx,
+    document_id: int,
+    file_path: str,
+    session_id: int,
+    user_id: int,
+    filename: str,
+    chunk_size: int = 1000,
+    chunk_overlap: int = 200,
+) -> str:
+    """
+    ARQ background job: extract → chunk → embed → index a user-uploaded file.
+
+    Steps
+    -----
+    1. Mark SessionDocument.status = 'processing'
+    2. Call ingest_session_document() — extract text, chunk, upsert to ChromaDB
+    3. On success: set status='ready' and record chunk_count
+    4. On failure: set status='failed' and record error_message
+    5. Delete the on-disk temp file in all cases
+
+    The ARQ ctx dict is injected by the worker and contains Redis settings.
+    """
+    from pathlib import Path as _Path
+    from datetime import datetime, timezone as _tz
+    from ..core.database import SessionLocal
+    from ..chat.model import SessionDocument
+    from ..library.rag import ingest_session_document
+
+    db = SessionLocal()
+    file_path_obj = _Path(file_path)
+
+    try:
+        # ── 1. Mark as processing ────────────────────────────────────────────
+        doc = db.query(SessionDocument).filter(SessionDocument.id == document_id).first()
+        if not doc:
+            logger.error(f"[DocJob] SessionDocument {document_id} not found.")
+            return f"not_found:{document_id}"
+
+        doc.status = "processing"
+        doc.updated_at = datetime.now(_tz.utc)
+        db.commit()
+
+        # ── 2. Ingest ────────────────────────────────────────────────────────
+        chunk_count = ingest_session_document(
+            document_id=document_id,
+            session_id=session_id,
+            user_id=user_id,
+            filename=filename,
+            file_path=file_path_obj,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+
+        # ── 3. Mark ready ────────────────────────────────────────────────────
+        doc.status = "ready"
+        doc.chunk_count = chunk_count
+        doc.updated_at = datetime.now(_tz.utc)
+        db.commit()
+        logger.info(f"[DocJob] document_id={document_id} ready — {chunk_count} chunks.")
+        return f"ready:{document_id}:{chunk_count}"
+
+    except Exception as exc:
+        # ── 4. Mark failed ───────────────────────────────────────────────────
+        logger.exception(f"[DocJob] document_id={document_id} failed: {exc}")
+        try:
+            db.rollback()
+            doc = db.query(SessionDocument).filter(SessionDocument.id == document_id).first()
+            if doc:
+                doc.status = "failed"
+                doc.error_message = str(exc)[:2000]
+                doc.updated_at = datetime.now(_tz.utc)
+                db.commit()
+        except Exception as inner:
+            logger.exception(f"[DocJob] Failed to write error status: {inner}")
+        return f"failed:{document_id}:{exc}"
+
+    finally:
+        db.close()
+        # ── 5. Delete temp file ───────────────────────────────────────────────
+        try:
+            if file_path_obj.exists():
+                file_path_obj.unlink()
+                logger.info(f"[DocJob] Deleted temp file: {file_path_obj}")
+        except Exception as e:
+            logger.warning(f"[DocJob] Could not delete temp file {file_path_obj}: {e}")

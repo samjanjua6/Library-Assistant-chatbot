@@ -21,7 +21,7 @@ from ..library.service import (
     place_hold, PlaceHoldArgs,
     get_my_holds, GetMyHoldsArgs
 )
-from ..library.rag import search_knowledge_base
+from ..library.rag import search_knowledge_base, search_session_document
 from ..library.evaluator import evaluate_retrieval
 
 
@@ -102,6 +102,23 @@ ORCHESTRATOR_TOOLS = [
                     "query": {
                         "type": "string",
                         "description": "The explicit question to pass to the Policy Agent."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "call_document_agent",
+            "description": "Route to the Document Agent to answer questions about the file the user has uploaded in this chat session. Use this when the user asks anything about their uploaded document, syllabus, report, paper, or file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The specific question to search for in the uploaded document."
                     }
                 },
                 "required": ["query"]
@@ -299,6 +316,95 @@ async def run_catalog_agent(query: str, user_id: int) -> str:
     return "Catalog Agent max loops reached."
 
 
+# ── Document Agent ───────────────────────────────────────────────────────────
+
+DOCUMENT_AGENT_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_uploaded_document",
+            "description": "Search the user's uploaded document for relevant passages that answer the question.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The exact question or topic to look for in the uploaded file."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    }
+]
+
+
+@observe(as_type="agent", name="document_agent")
+async def run_document_agent(
+    query: str,
+    user_id: int,
+    session_id: int,
+    document_id: int,
+) -> tuple[str, list]:
+    """Agent that answers questions by searching the user's uploaded session document."""
+    client = _client()
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are the Document Agent. You have access to the user's uploaded file. "
+                "Use the search_uploaded_document tool to find relevant passages, then answer the question "
+                "concisely and accurately based ONLY on what was found. "
+                "Always cite the section number you found the information in (e.g. 'According to section 3 of the document...'). "
+                "If the document does not contain the answer, say so clearly."
+            )
+        },
+        {"role": "user", "content": query}
+    ]
+    doc_chunks: list = []
+
+    for _ in range(3):
+        try:
+            resp = await call_with_retry(
+                client.chat.completions.create,
+                model="gemma-4-31b",
+                messages=messages,
+                tools=DOCUMENT_AGENT_TOOLS,
+                tool_choice="auto",
+                temperature=0.3,
+                max_tokens=1024,
+            )
+            msg = resp.choices[0].message
+            if msg.tool_calls:
+                messages.append(msg)
+                for tc in msg.tool_calls:
+                    if tc.function.name == "search_uploaded_document":
+                        try:
+                            args = json.loads(tc.function.arguments)
+                        except Exception:
+                            args = {}
+                        tool_query = args.get("query", query)
+                        result_json = search_session_document(
+                            query=tool_query,
+                            session_id=session_id,
+                            document_id=document_id,
+                        )
+                        try:
+                            parsed = json.loads(result_json)
+                            if parsed.get("status") == "success":
+                                doc_chunks.extend(parsed.get("results", []))
+                        except Exception:
+                            pass
+                        messages.append({"role": "tool", "tool_call_id": tc.id, "content": result_json})
+                    else:
+                        messages.append({"role": "tool", "tool_call_id": tc.id, "content": "{}"})
+            else:
+                return msg.content or "I could not find relevant information in the document.", doc_chunks
+        except Exception as e:
+            return f"Document Agent Error: {e}", doc_chunks
+    return "Document Agent max loops reached.", doc_chunks
+
+
 @observe(as_type="agent", name="policy_agent")
 async def run_policy_agent(query: str, user_id: int) -> tuple[str, list]:
     """Agent specialized in policy/knowledge base. Returns (response_text, retrieved_chunks)."""
@@ -345,17 +451,44 @@ async def stream_reply(
     user_message: str,
     user_id: int,
     retrieved_context: str = "",
+    active_document_id: int | None = None,
+    active_session_id: int | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Orchestrator stream_reply. Acts as a router.
+    When *active_document_id* is set the orchestrator gains a third tool,
+    call_document_agent, to answer questions about the uploaded file.
     """
     if await is_harmful_input(user_message):
         yield "[Safety Warning: Content flagged.]"
         return
 
     client = _client()
-    orchestrator_prompt = "You are the Orchestrator for the Library Assistant. Your job is routing, not answering. Delegate catalog queries to the Catalog Agent. Delegate policy/rules queries to the Policy Agent. If the user's message is a simple greeting, you can reply directly. DO NOT attempt to answer policy or catalog questions yourself. Use your routing tools."
-    
+
+    has_doc = active_document_id is not None and active_session_id is not None
+
+    if has_doc:
+        orchestrator_prompt = (
+            "You are the Orchestrator for the Library Assistant. "
+            "The user has uploaded a document into this session. "
+            "Delegate questions about the uploaded document to the Document Agent. "
+            "Delegate catalog queries to the Catalog Agent. "
+            "Delegate policy/rules queries to the Policy Agent. "
+            "If the user's message is a simple greeting, reply directly. "
+            "DO NOT answer questions yourself — always delegate."
+        )
+        active_tools = ORCHESTRATOR_TOOLS  # already includes call_document_agent
+    else:
+        orchestrator_prompt = (
+            "You are the Orchestrator for the Library Assistant. Your job is routing, not answering. "
+            "Delegate catalog queries to the Catalog Agent. "
+            "Delegate policy/rules queries to the Policy Agent. "
+            "If the user's message is a simple greeting, you can reply directly. "
+            "DO NOT attempt to answer policy or catalog questions yourself. Use your routing tools."
+        )
+        # Exclude the document tool when no document is uploaded
+        active_tools = [t for t in ORCHESTRATOR_TOOLS if t["function"]["name"] != "call_document_agent"]
+
     messages = [{"role": "system", "content": orchestrator_prompt}]
     messages.extend(_to_groq_history(history))
     messages.append({"role": "user", "content": user_message})
@@ -369,7 +502,7 @@ async def stream_reply(
                 client.chat.completions.create,
                 model="gemma-4-31b",
                 messages=messages,
-                tools=ORCHESTRATOR_TOOLS,
+                tools=active_tools,
                 tool_choice="auto",
                 temperature=0.3,
                 max_tokens=2048,
@@ -429,6 +562,18 @@ async def stream_reply(
                     res_text, chunks = await run_policy_agent(query, user_id)
                     kb_eval_data["chunks"].extend(chunks)
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
+
+                elif name == "call_document_agent" and has_doc:
+                    yield "[STATUS:Reading your uploaded document...]"
+                    res_text, doc_chunks = await run_document_agent(
+                        query=query,
+                        user_id=user_id,
+                        session_id=active_session_id,  # type: ignore[arg-type]
+                        document_id=active_document_id,  # type: ignore[arg-type]
+                    )
+                    kb_eval_data["chunks"].extend(doc_chunks)
+                    messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res_text})
+
                 else:
                     messages.append({"role": "tool", "tool_call_id": tc["id"], "content": f"Unknown agent: {name}"})
             continue

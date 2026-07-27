@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 const SendIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -7,8 +7,19 @@ const SendIcon = () => (
   </svg>
 )
 
-export default function ChatInput({ onSend, disabled, isStreaming }) {
-  const inputRef = useRef(null)
+const PaperclipIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+  </svg>
+)
+
+const MAX_BYTES = 20 * 1024 * 1024   // 20 MB
+const ALLOWED_EXTS = new Set(['.pdf', '.docx', '.txt', '.md', '.csv', '.xlsx', '.json'])
+
+export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload, sessionId }) {
+  const inputRef  = useRef(null)
+  const fileRef   = useRef(null)
+  const [fileErr, setFileErr] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -19,6 +30,39 @@ export default function ChatInput({ onSend, disabled, isStreaming }) {
     inputRef.current.focus()
   }
 
+  function handleFileClick() {
+    if (!sessionId) {
+      setFileErr('Start a chat session first before uploading a file.')
+      setTimeout(() => setFileErr(''), 3500)
+      return
+    }
+    setFileErr('')
+    fileRef.current?.click()
+  }
+
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Reset so the same file can be re-selected if needed
+    e.target.value = ''
+
+    // Client-side guards (server also validates)
+    const ext = '.' + file.name.split('.').pop().toLowerCase()
+    if (!ALLOWED_EXTS.has(ext)) {
+      setFileErr(`File type "${ext}" is not allowed.`)
+      setTimeout(() => setFileErr(''), 4000)
+      return
+    }
+    if (file.size > MAX_BYTES) {
+      setFileErr(`File too large (${(file.size / 1e6).toFixed(1)} MB). Max is 20 MB.`)
+      setTimeout(() => setFileErr(''), 4000)
+      return
+    }
+
+    setFileErr('')
+    if (onFileUpload) onFileUpload(file)
+  }
+
   const isLocked = disabled || isStreaming
   const placeholder = disabled ? 'Connecting…' : isStreaming ? 'Zylo AI is thinking…' : 'Type your message here…'
 
@@ -27,6 +71,9 @@ export default function ChatInput({ onSend, disabled, isStreaming }) {
       className="shrink-0 px-6 pb-6 pt-3"
       style={{ borderTop: '1px solid var(--border)', background: 'var(--glass-bg)', backdropFilter: 'blur(20px)' }}
     >
+      {fileErr && (
+        <p className="text-xs text-rose-400 text-center mb-2 animate-pulse">{fileErr}</p>
+      )}
       <form
         onSubmit={handleSubmit}
         className="flex items-center gap-3 px-5 py-2 rounded-2xl transition-all duration-150"
@@ -38,6 +85,29 @@ export default function ChatInput({ onSend, disabled, isStreaming }) {
         onFocusCapture={e => e.currentTarget.style.borderColor = 'rgba(52,152,219,0.45)'}
         onBlurCapture={e =>  e.currentTarget.style.borderColor = 'var(--border)'}
       >
+        {/* Hidden file input */}
+        <input
+          ref={fileRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json"
+          onChange={handleFileChange}
+          aria-label="Upload file"
+        />
+
+        {/* Paperclip button */}
+        <button
+          type="button"
+          onClick={handleFileClick}
+          disabled={isLocked}
+          title="Attach a file (PDF, DOCX, TXT, MD, CSV, XLSX, JSON — max 20 MB)"
+          aria-label="Attach file"
+          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-150 hover:opacity-85 hover:scale-105 active:scale-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
+        >
+          <PaperclipIcon />
+        </button>
+
         <input
           ref={inputRef}
           type="text"

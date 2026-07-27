@@ -96,6 +96,13 @@ export default function ChatPage() {
   const skipWsReconnectRef = useRef(false)
   const [showSidebar, setShowSidebar] = useState(true)
 
+  // ── Session document state ──────────────────────────────────────────────────
+  const [activeDocumentId, setActiveDocumentId] = useState(null)
+  const [activeDocumentName, setActiveDocumentName] = useState('')
+  const [uploadStatus, setUploadStatus] = useState(null) // null | 'uploading' | 'processing' | 'ready' | 'failed'
+  const [uploadError, setUploadError] = useState('')
+  const docPollRef = useRef(null)
+
   // Fetch all sessions on mount
   const fetchSessions = useCallback(async () => {
     try {
@@ -255,6 +262,35 @@ export default function ChatPage() {
       }
       return
     }
+    if (data.startsWith('[DOC_READY:')) {
+      try {
+        const json = data.replace('[DOC_READY:', '').replace(/\]$/, '')
+        const info = JSON.parse(json)
+        setActiveDocumentId(info.document_id)
+        setActiveDocumentName(info.filename)
+        setUploadStatus('ready')
+      } catch (e) { /* ignore */ }
+      return
+    }
+    if (data.startsWith('[DOC_STATUS:')) {
+      try {
+        const json = data.replace('[DOC_STATUS:', '').replace(/\]$/, '')
+        const info = JSON.parse(json)
+        if (info.status === 'ready') {
+          setActiveDocumentId(info.document_id)
+          setActiveDocumentName(info.filename)
+          setUploadStatus('ready')
+          if (docPollRef.current) clearInterval(docPollRef.current)
+        } else if (info.status === 'failed') {
+          setUploadStatus('failed')
+          setUploadError(info.error_message || 'Processing failed.')
+          if (docPollRef.current) clearInterval(docPollRef.current)
+        } else {
+          setUploadStatus(info.status)
+        }
+      } catch (e) { /* ignore */ }
+      return
+    }
     if (data.startsWith('[STATUS:')) {
       const statusMsg = data.replace('[STATUS:', '').replace(/\]$/, '')
       setToolStatus(statusMsg)
@@ -288,6 +324,59 @@ export default function ChatPage() {
   }, [addMessage, navigate])
 
   const { send } = useWebSocket(token, activeSessionId, handleChunk, handleStatus, skipWsReconnectRef)
+
+  // ── File upload handler ─────────────────────────────────────────────────────
+  const handleFileUpload = useCallback(async (file) => {
+    if (!activeSessionId) return
+    setUploadStatus('uploading')
+    setUploadError('')
+    setActiveDocumentId(null)
+    setActiveDocumentName(file.name)
+    if (docPollRef.current) clearInterval(docPollRef.current)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch(`/api/chat/sessions/${activeSessionId}/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUploadStatus('failed')
+        setUploadError(data.detail || 'Upload failed.')
+        return
+      }
+
+      const docId = data.document_id
+      // If the server already processed it synchronously (Redis down fallback)
+      if (data.status === 'ready') {
+        setActiveDocumentId(docId)
+        setUploadStatus('ready')
+        return
+      }
+
+      // Otherwise poll via WebSocket [CHECK_DOC:] frames every 2 seconds
+      setUploadStatus('processing')
+      docPollRef.current = setInterval(() => {
+        send(`[CHECK_DOC:${docId}]`)
+      }, 2000)
+
+      // Safety timeout: stop polling after 90 seconds
+      setTimeout(() => {
+        if (docPollRef.current) {
+          clearInterval(docPollRef.current)
+          docPollRef.current = null
+        }
+      }, 90000)
+
+    } catch (err) {
+      setUploadStatus('failed')
+      setUploadError('Network error during upload.')
+    }
+  }, [activeSessionId, token, send])
 
   function handleSend(text) {
     if (!text.trim() || wsStatus !== 'online' || isStreaming) return
@@ -347,7 +436,49 @@ export default function ChatPage() {
         />
         <div className="flex flex-col flex-1 min-w-0">
           <MessageList messages={messages} username={username} toolStatus={toolStatus} />
-          <ChatInput onSend={handleSend} disabled={wsStatus !== 'online'} isStreaming={isStreaming} />
+
+          {/* ── Document status pill ───────────────────────────────────── */}
+          {uploadStatus && (
+            <div
+              className="mx-6 mb-2 px-4 py-2 rounded-xl text-xs flex items-center gap-2 border"
+              style={{
+                background: uploadStatus === 'ready' ? 'rgba(16,185,129,0.12)'
+                  : uploadStatus === 'failed' ? 'rgba(239,68,68,0.12)'
+                  : 'rgba(99,102,241,0.12)',
+                borderColor: uploadStatus === 'ready' ? 'rgba(16,185,129,0.3)'
+                  : uploadStatus === 'failed' ? 'rgba(239,68,68,0.3)'
+                  : 'rgba(99,102,241,0.3)',
+                color: uploadStatus === 'ready' ? '#34d399'
+                  : uploadStatus === 'failed' ? '#f87171'
+                  : '#a5b4fc',
+              }}
+            >
+              {uploadStatus === 'uploading' && (
+                <><span className="w-3 h-3 rounded-full border-2 border-t-indigo-400 border-r-indigo-400 border-b-transparent border-l-transparent animate-spin" />Uploading {activeDocumentName}…</>
+              )}
+              {uploadStatus === 'processing' && (
+                <><span className="w-3 h-3 rounded-full border-2 border-t-indigo-400 border-r-indigo-400 border-b-transparent border-l-transparent animate-spin" />Indexing {activeDocumentName}…<span className="ml-1 opacity-60">(this may take a few seconds)</span></>
+              )}
+              {uploadStatus === 'ready' && (
+                <><span>📎</span><span className="font-medium">{activeDocumentName}</span><span className="opacity-70">ready — you can now ask questions about this file</span>
+                  <button onClick={() => { setUploadStatus(null); setActiveDocumentId(null); setActiveDocumentName('') }} className="ml-auto opacity-50 hover:opacity-100 text-base leading-none">×</button>
+                </>
+              )}
+              {uploadStatus === 'failed' && (
+                <><span>⚠</span><span>{uploadError || 'Processing failed.'}</span>
+                  <button onClick={() => setUploadStatus(null)} className="ml-auto opacity-50 hover:opacity-100 text-base leading-none">×</button>
+                </>
+              )}
+            </div>
+          )}
+
+          <ChatInput
+            onSend={handleSend}
+            disabled={wsStatus !== 'online'}
+            isStreaming={isStreaming}
+            onFileUpload={handleFileUpload}
+            sessionId={activeSessionId}
+          />
         </div>
       </div>
     </div>
