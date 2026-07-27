@@ -51,9 +51,12 @@ jobs:
           unzip -o ~/deploy.zip -d ~/library-app
           cd ~/library-app
           touch .env
-          if ! grep -q "DATABASE_URL=" .env; then echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; else sed -i 's|DATABASE_URL=.*|DATABASE_URL=sqlite:///./data/app.db|g' .env; fi
+          # Create the persistent data directories on the server if they don't exist
+          mkdir -p /home/shaheer/library-data
+          mkdir -p /home/shaheer/library-redis-data
+          mkdir -p /home/shaheer/library-postgres-data
           sudo apt-get update && sudo apt-get install docker-compose -y
-          # Tear down ALL containers cleanly, including any orphans from old compose definitions (e.g. before Redis was added)
+          # Tear down ALL containers cleanly, including any orphans from old compose definitions
           sudo docker compose down --remove-orphans || sudo docker-compose down --remove-orphans || true
-          # Rebuild the web image so new pip packages (e.g. redis) are installed, then start all services
+          # Rebuild the web image so new pip packages are installed, then start all services
           sudo docker compose up -d --build --remove-orphans || sudo docker-compose up -d --build --remove-orphans
