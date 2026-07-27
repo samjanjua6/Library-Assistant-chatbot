@@ -9,6 +9,7 @@ import chromadb
 from pathlib import Path
 import hashlib
 import redis
+from rank_bm25 import BM25Okapi
 from ..core.config import settings
 
 # Paths
@@ -32,6 +33,36 @@ chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
 
 # Get or create the collection
 collection = chroma_client.get_or_create_collection(name="library_knowledge_base")
+
+# ── BM25 Hybrid Search State ─────────────────────────────────────────────────
+_bm25_index = None
+_bm25_corpus = []
+
+def rebuild_bm25_index():
+    """Reads all current chunks from ChromaDB and rebuilds the BM25 index in memory."""
+    global _bm25_index, _bm25_corpus
+    all_data = collection.get()
+    
+    if all_data and all_data.get("documents") and len(all_data["documents"]) > 0:
+        _bm25_corpus = [
+            {
+                "id": all_data["ids"][i],
+                "text": all_data["documents"][i],
+                "metadata": all_data["metadatas"][i]
+            }
+            for i in range(len(all_data["documents"]))
+        ]
+        # Tokenize by splitting on whitespace for BM25
+        tokenized = [doc["text"].lower().split() for doc in _bm25_corpus]
+        _bm25_index = BM25Okapi(tokenized)
+        print(f"[RAG] Rebuilt BM25 index with {len(_bm25_corpus)} documents.")
+    else:
+        _bm25_index = None
+        _bm25_corpus = []
+        print("[RAG] Cleared BM25 index (no documents).")
+
+# Initialize BM25 on startup from existing DB chunks
+rebuild_bm25_index()
 
 # Initialize Redis client lazily so a Redis outage never crashes the app
 _redis_client = None
@@ -219,8 +250,10 @@ def ingest_documents(chunk_size: int = 1000, chunk_overlap: int = 200):
     if documents:
         collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
         print(f"[RAG] Ingested {len(documents)} chunks from {KNOWLEDGE_BASE_DIR}.")
+        rebuild_bm25_index()
     else:
         print("[RAG] No documents found to ingest.")
+        rebuild_bm25_index()
 
 
 def add_document_to_kb(filename: str, content: str, chunk_size: int = 1000, chunk_overlap: int = 200):
@@ -249,6 +282,7 @@ def add_document_to_kb(filename: str, content: str, chunk_size: int = 1000, chun
     if documents:
         collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
         print(f"[RAG] Added {len(documents)} chunks for '{filename}'.")
+        rebuild_bm25_index()
 
 
 def _delete_file_chunks(filename: str):
@@ -258,6 +292,7 @@ def _delete_file_chunks(filename: str):
         if existing and existing["ids"]:
             collection.delete(ids=existing["ids"])
             print(f"[RAG] Removed {len(existing['ids'])} old chunks for '{filename}'.")
+            rebuild_bm25_index()
     except Exception as e:
         print(f"[RAG] Warning: Could not remove old chunks for '{filename}': {e}")
 
@@ -304,6 +339,7 @@ def clear_knowledge_base():
     existing = collection.get()
     if existing and existing["ids"]:
         collection.delete(ids=existing["ids"])
+        rebuild_bm25_index()
 
 
 def search_knowledge_base(query: str, n_results: int = 3) -> str:
@@ -330,16 +366,52 @@ def search_knowledge_base(query: str, n_results: int = 3) -> str:
             except Exception as redis_err:
                 print(f"[Redis Error] Failed to read from cache: {redis_err}")
             
-        print(f"[Cache Miss] Querying ChromaDB for: '{query}'")
-        results = collection.query(query_texts=[query], n_results=n_results)
+        print(f"[Cache Miss] Querying Hybrid Search for: '{query}'")
+        
+        # 1. Vector Search (ChromaDB)
+        vector_results = collection.query(query_texts=[query], n_results=n_results * 2)
+        vector_scores = {}
+        if vector_results and vector_results["ids"]:
+            for i, doc_id in enumerate(vector_results["ids"][0]):
+                distance = vector_results["distances"][0][i]
+                if distance < 1.5:  # Semantic distance filter
+                    vector_scores[doc_id] = 1.0 / (60 + i + 1)
+
+        # 2. Keyword Search (BM25)
+        bm25_scores = {}
+        if _bm25_index is not None and len(_bm25_corpus) > 0:
+            tokenized_query = query.lower().split()
+            bm25_raw_scores = _bm25_index.get_scores(tokenized_query)
+            # Get indices of top scores
+            top_indices = sorted(range(len(bm25_raw_scores)), key=lambda idx: bm25_raw_scores[idx], reverse=True)[:n_results * 2]
+            for rank, idx in enumerate(top_indices):
+                if bm25_raw_scores[idx] > 0:
+                    doc_id = _bm25_corpus[idx]["id"]
+                    bm25_scores[doc_id] = 1.0 / (60 + rank + 1)
+
+        # 3. Reciprocal Rank Fusion (RRF)
+        rrf_scores = {}
+        all_ids = set(vector_scores.keys()).union(set(bm25_scores.keys()))
+        for doc_id in all_ids:
+            rrf_scores[doc_id] = vector_scores.get(doc_id, 0.0) + bm25_scores.get(doc_id, 0.0)
+
+        # Sort by RRF score and take top n_results
+        sorted_ids = sorted(rrf_scores.keys(), key=lambda k: rrf_scores[k], reverse=True)[:n_results]
 
         passages = []
-        if results and results["documents"]:
-            for i, doc_text in enumerate(results["documents"][0]):
-                source = results["metadatas"][0][i].get("source", "Unknown")
-                distance = results["distances"][0][i]
-                if distance < 1.5:
-                    passages.append({"source": source, "text": doc_text})
+        if sorted_ids:
+            final_docs = collection.get(ids=sorted_ids)
+            # Map retrieved docs back to their sorted order
+            id_to_doc = {
+                final_docs["ids"][i]: {
+                    "source": final_docs["metadatas"][i].get("source", "Unknown"),
+                    "text": final_docs["documents"][i]
+                }
+                for i in range(len(final_docs["ids"]))
+            }
+            for doc_id in sorted_ids:
+                if doc_id in id_to_doc:
+                    passages.append(id_to_doc[doc_id])
 
         if passages:
             response_json = json.dumps({"status": "success", "results": passages})
