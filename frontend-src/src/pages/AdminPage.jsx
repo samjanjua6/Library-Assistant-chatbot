@@ -24,6 +24,8 @@ function KnowledgeBaseManager() {
   const [uploading, setUploading] = useState(false)
   const [statusMsg, setStatusMsg] = useState(null) // { type: 'success'|'error', text }
   const [isDragging, setIsDragging] = useState(false)
+  const [fileToDelete, setFileToDelete] = useState(null)
+  const [confirmClearAll, setConfirmClearAll] = useState(false)
   const [chunkSize, setChunkSize] = useState(() => Number(localStorage.getItem('zylo_chunk_size')) || 1000)
   const [chunkOverlap, setChunkOverlap] = useState(() => Number(localStorage.getItem('zylo_chunk_overlap')) || 200)
 
@@ -88,6 +90,7 @@ function KnowledgeBaseManager() {
         setTimeout(() => setStatusMsg(null), 3000)
       }
     } catch (e) { setStatusMsg({ type: 'error', text: e.message }) }
+    setFileToDelete(null)
   }
 
   const handleClearAll = async () => {
@@ -97,10 +100,30 @@ function KnowledgeBaseManager() {
       setStatusMsg({ type: 'success', text: '✓ Knowledge base cleared.' })
       setTimeout(() => setStatusMsg(null), 3000)
     } catch (e) { setStatusMsg({ type: 'error', text: e.message }) }
+    setConfirmClearAll(false)
   }
 
   return (
-    <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col gap-4">
+    <>
+      <ConfirmModal
+        isOpen={!!fileToDelete}
+        onClose={() => setFileToDelete(null)}
+        onConfirm={() => {
+          if (fileToDelete) handleDelete(fileToDelete)
+        }}
+        title="Delete Document"
+        message={`Are you sure you want to delete "${fileToDelete}" from the knowledge base?`}
+        confirmText="Delete"
+      />
+      <ConfirmModal
+        isOpen={confirmClearAll}
+        onClose={() => setConfirmClearAll(false)}
+        onConfirm={handleClearAll}
+        title="Clear Knowledge Base"
+        message="Are you sure you want to clear the ENTIRE knowledge base? This action cannot be undone."
+        confirmText="Clear All"
+      />
+      <section className="bg-[var(--glass-input)] border border-[var(--border)] rounded-2xl p-6 shadow-lg flex flex-col gap-4">
       <h2 className="text-xl font-bold flex items-center gap-2">
         <svg className="w-5 h-5 text-fuchsia-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -219,6 +242,7 @@ function KnowledgeBaseManager() {
         </button>
       )}
     </section>
+    </>
   )
 }
 
@@ -233,8 +257,6 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reportDownloading, setReportDownloading] = useState(false)
-  const [fileToDelete, setFileToDelete] = useState(null)
-  const [confirmClearAll, setConfirmClearAll] = useState(false)
   const navigate = useNavigate()
 
   const handleDownloadReport = async () => {
@@ -414,26 +436,7 @@ export default function AdminPage() {
   }
 
   return (
-    <>
-      <ConfirmModal
-        isOpen={!!fileToDelete}
-        onClose={() => setFileToDelete(null)}
-        onConfirm={() => {
-          if (fileToDelete) handleDelete(fileToDelete)
-        }}
-        title="Delete Document"
-        message={`Are you sure you want to delete "${fileToDelete}" from the knowledge base?`}
-        confirmText="Delete"
-      />
-      <ConfirmModal
-        isOpen={confirmClearAll}
-        onClose={() => setConfirmClearAll(false)}
-        onConfirm={handleClearAll}
-        title="Clear Knowledge Base"
-        message="Are you sure you want to clear the ENTIRE knowledge base? This action cannot be undone."
-        confirmText="Clear All"
-      />
-      <div className="min-h-screen relative font-sans flex flex-col text-white">
+    <div className="min-h-screen relative font-sans flex flex-col text-white">
       <AnimatedMeshBackground />
       <header className="relative z-20 px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-xl sticky top-0 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
@@ -677,6 +680,5 @@ export default function AdminPage() {
 
       </main>
     </div>
-    </>
   )
 }
