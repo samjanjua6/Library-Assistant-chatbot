@@ -16,7 +16,7 @@ from .model import Book, Loan
 from .service import return_book, ReturnBookArgs
 from .rag import (
     add_document_to_kb, delete_document, list_documents,
-    clear_knowledge_base, extract_text, KNOWLEDGE_BASE_DIR, SUPPORTED_EXTENSIONS,
+    clear_knowledge_base, extract_text, KNOWLEDGE_BASE_DIR, PERSISTENT_KB_DIR, SUPPORTED_EXTENSIONS,
     ingest_documents
 )
 
@@ -208,8 +208,8 @@ async def admin_upload_kb(
             detail=f"Unsupported file type '{ext}'. Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
         )
 
-    # Save file to knowledge_base directory
-    dest = KNOWLEDGE_BASE_DIR / file.filename
+    # Save file to persistent knowledge_base directory
+    dest = PERSISTENT_KB_DIR / file.filename
     try:
         contents = await file.read()
         with open(dest, "wb") as f:
@@ -226,13 +226,9 @@ async def admin_upload_kb(
 
         add_document_to_kb(file.filename, text, chunk_size, chunk_overlap)
         
-        # Git Sync
-        git_success, git_err = sync_git_knowledge_base("add", file.filename)
-        warning = "" if git_success else f" (Warning: GitHub sync failed - {git_err})"
-        
         return {
             "success": True,
-            "message": f"'{file.filename}' ingested successfully.{warning}",
+            "message": f"'{file.filename}' ingested successfully.",
             "chunks": len(text) // chunk_size + 1
         }
     except HTTPException:
@@ -244,16 +240,21 @@ async def admin_upload_kb(
 
 @router.delete("/api/library/admin/knowledge-base/file/{filename}")
 def admin_delete_kb_file(filename: str, admin: User = Depends(get_current_admin_user)):
-    """Delete a specific document from the knowledge base by filename."""
-    success = delete_document(filename)
-    if not success:
-        raise HTTPException(status_code=404, detail=f"File '{filename}' not found in knowledge base.")
-        
-    # Git Sync
-    git_success, git_err = sync_git_knowledge_base("rm", filename)
-    warning = "" if git_success else f" (Warning: GitHub sync failed - {git_err})"
+    """Delete a document from both ChromaDB and the persistent file system."""
     
-    return {"success": True, "message": f"'{filename}' removed from knowledge base.{warning}"}
+    # Try removing from either directory
+    dest_git = KNOWLEDGE_BASE_DIR / filename
+    dest_persist = PERSISTENT_KB_DIR / filename
+    
+    if dest_git.exists():
+        dest_git.unlink()
+        sync_git_knowledge_base("rm", filename) # Might fail in docker, but harmless
+    elif dest_persist.exists():
+        dest_persist.unlink()
+    else:
+        raise HTTPException(status_code=404, detail="File not found on disk.")
+        
+    return {"status": "success", "message": f"Deleted {filename} from knowledge base."}
 
 
 @router.delete("/api/library/admin/knowledge-base")

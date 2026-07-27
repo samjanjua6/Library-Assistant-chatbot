@@ -17,6 +17,11 @@ KNOWLEDGE_BASE_DIR = BASE_DIR / "knowledge_base"
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 KNOWLEDGE_BASE_DIR.mkdir(parents=True, exist_ok=True)
+
+# A persistent folder for files uploaded via the Admin Panel
+PERSISTENT_KB_DIR = DATA_DIR / "kb_uploads"
+PERSISTENT_KB_DIR.mkdir(parents=True, exist_ok=True)
+
 CHROMA_DB_DIR = DATA_DIR / "chroma_db"
 
 # Supported file extensions
@@ -268,15 +273,29 @@ def delete_document(filename: str) -> bool:
 
 
 def list_documents() -> list[dict]:
-    """Return a list of all documents in the knowledge_base directory with metadata."""
+    """Return a list of all documents in the knowledge_base directories with metadata."""
     docs = []
+    
+    # Read from GitHub synced directory
     for file_path in sorted(KNOWLEDGE_BASE_DIR.iterdir()):
         if file_path.suffix.lower() in SUPPORTED_EXTENSIONS:
             docs.append({
                 "filename": file_path.name,
                 "size_bytes": file_path.stat().st_size,
                 "file_type": file_path.suffix.lower().lstrip(".").upper(),
+                "source": "github"
             })
+            
+    # Read from Persistent Admin Uploads directory
+    for file_path in sorted(PERSISTENT_KB_DIR.iterdir()):
+        if file_path.suffix.lower() in SUPPORTED_EXTENSIONS:
+            docs.append({
+                "filename": file_path.name,
+                "size_bytes": file_path.stat().st_size,
+                "file_type": file_path.suffix.lower().lstrip(".").upper(),
+                "source": "admin_upload"
+            })
+            
     return docs
 
 
