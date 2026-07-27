@@ -24,26 +24,7 @@ const glass = {
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center pt-28 pb-16 overflow-hidden px-6">
-      
-      {/* --- Animated Mesh Background --- */}
-      <motion.div
-        className="absolute top-[10%] left-[20%] w-[30rem] h-[30rem] bg-purple-600/30 rounded-full blur-[100px] pointer-events-none"
-        animate={{ x: [0, 100, -50, 0], y: [0, -100, 50, 0] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute top-[30%] right-[10%] w-[35rem] h-[35rem] bg-blue-600/30 rounded-full blur-[100px] pointer-events-none"
-        animate={{ x: [0, -120, 80, 0], y: [0, 90, -70, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute bottom-[-10%] left-[30%] w-[25rem] h-[25rem] bg-indigo-600/30 rounded-full blur-[100px] pointer-events-none"
-        animate={{ x: [0, 70, -90, 0], y: [0, 120, -50, 0] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* -------------------------------- */}
-
+    <section className="relative min-h-[90vh] flex items-center justify-center pt-28 pb-16 px-6">
       <motion.div
         variants={containerVariants}
         initial="hidden"
