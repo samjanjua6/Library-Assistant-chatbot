@@ -233,7 +233,32 @@ export default function AdminPage() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reportDownloading, setReportDownloading] = useState(false)
   const navigate = useNavigate()
+
+  const handleDownloadReport = async () => {
+    setReportDownloading(true)
+    try {
+      const token = localStorage.getItem('zylo_token')
+      const res = await fetch('/api/admin/download-report', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to generate report')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `library_report_${new Date().toISOString().slice(0,10)}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert('Could not download report: ' + err.message)
+    } finally {
+      setReportDownloading(false)
+    }
+  }
 
   // New book form state
   const [newTitle, setNewTitle] = useState('')
@@ -392,7 +417,27 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
           Zylo Admin Panel
         </h1>
-        <div className="flex gap-4">
+        <div className="flex gap-3 items-center">
+          {/* Download Report Button */}
+          <button
+            onClick={handleDownloadReport}
+            disabled={reportDownloading}
+            className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {reportDownloading ? (
+              <>
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-t-emerald-400 border-r-emerald-400 border-b-transparent border-l-transparent animate-spin" />
+                Generating…
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Report
+              </>
+            )}
+          </button>
           <button onClick={() => navigate('/chat')} className="text-sm font-medium hover:text-sky-400 transition-colors">Chat</button>
           <button onClick={() => navigate('/dashboard')} className="text-sm font-medium hover:text-indigo-400 transition-colors">Dashboard</button>
           <button onClick={handleLogout} className="text-sm font-medium text-rose-400 hover:text-rose-300 transition-colors">Logout</button>

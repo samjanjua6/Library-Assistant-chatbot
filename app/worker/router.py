@@ -5,11 +5,12 @@ POST /api/admin/trigger-report   — enqueue generate_and_email_report immediate
 GET  /api/admin/report-status/{job_id} — poll for completion / result
 """
 from __future__ import annotations
-
+import io
 import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 
 # pyrefly: ignore [missing-import]
 from arq import create_pool
@@ -19,6 +20,7 @@ from arq.jobs import Job, JobStatus
 from ..core.deps import get_current_admin_user
 from ..users.model import User
 from .worker import _redis_settings_from_url
+from .tasks import _fetch_stats, _build_pdf
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/admin", tags=["Admin - Reports"])
@@ -93,3 +95,20 @@ async def report_status(
         return response
     finally:
         await pool.close()
+
+
+@router.get("/download-report", summary="Generate and download the daily PDF report instantly")
+async def download_report(admin: User = Depends(get_current_admin_user)):
+    """
+    Builds the PDF report synchronously in memory and streams it
+    directly to the browser as a file download — no email, no queue.
+    """
+    stats = _fetch_stats()
+    pdf_bytes = _build_pdf(stats)
+    filename = f"library_report_{stats['date'].replace(' ', '_').replace(',', '')}.pdf"
+
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
