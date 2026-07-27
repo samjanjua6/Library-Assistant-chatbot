@@ -24,12 +24,33 @@ const glass = {
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-28 pb-16 overflow-hidden px-6">
+    <section className="relative min-h-[90vh] flex items-center justify-center pt-28 pb-16 overflow-hidden px-6">
+      
+      {/* --- Animated Mesh Background --- */}
+      <motion.div
+        className="absolute top-[10%] left-[20%] w-[30rem] h-[30rem] bg-purple-600/30 rounded-full blur-[100px] pointer-events-none"
+        animate={{ x: [0, 100, -50, 0], y: [0, -100, 50, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute top-[30%] right-[10%] w-[35rem] h-[35rem] bg-blue-600/30 rounded-full blur-[100px] pointer-events-none"
+        animate={{ x: [0, -120, 80, 0], y: [0, 90, -70, 0] }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute bottom-[-10%] left-[30%] w-[25rem] h-[25rem] bg-indigo-600/30 rounded-full blur-[100px] pointer-events-none"
+        animate={{ x: [0, 70, -90, 0], y: [0, 120, -50, 0] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* -------------------------------- */}
+
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-4xl mx-auto text-center flex flex-col items-center"
+        whileHover={{ y: -5 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center p-8 md:p-16 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]"
       >
         {/* Live badge */}
         <motion.div
@@ -56,7 +77,6 @@ export default function Hero() {
           </span>
         </motion.h1>
 
-        {/* Sub-head */}
         <motion.p
           variants={itemVariants}
           className="text-lg md:text-xl max-w-2xl mb-12 font-light leading-relaxed"
@@ -100,9 +120,9 @@ export default function Hero() {
           ].map((item, i) => (
             <motion.div
               key={i}
-              whileHover={{ scale: 1.03, boxShadow: 'var(--shadow)' }}
+              whileHover={{ scale: 1.03, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}
               style={{ ...glass }}
-              className="flex flex-col items-center gap-3 p-6 rounded-3xl cursor-default"
+              className="flex flex-col items-center gap-3 p-6 rounded-3xl cursor-default border border-white/10"
             >
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center"
