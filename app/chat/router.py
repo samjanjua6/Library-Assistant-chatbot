@@ -140,39 +140,27 @@ async def upload_session_document(
     db.commit()
     db.refresh(doc)
 
-    # Enqueue ARQ background job via redis-py (avoids creating a new arq pool per request)
+    # Enqueue ARQ background job
     try:
-        import json as _json
-        import time as _time
-        from ..library.rag import get_redis
+        from arq import create_pool  # pyrefly: ignore [missing-import]
+        from arq.connections import RedisSettings
+        from ..core.config import settings as app_settings
 
-        rc = get_redis()
-        if rc is None:
-            raise RuntimeError("Redis not available")
+        url = app_settings.REDIS_URL.replace("redis://", "").replace("rediss://", "")
+        host_port, *db_parts = url.split("/")
+        db_num = int(db_parts[0]) if db_parts else 0
+        host, port = (host_port.split(":", 1) if ":" in host_port else (host_port, "6379"))
 
-        job_id = f"doc_{doc.id}_{int(_time.time() * 1000)}"
-        job_payload = _json.dumps({
-            "t": "job",
-            "ts": _time.time(),
-            "f": "process_session_document",
-            "args": [],
-            "kwargs": {
-                "document_id": doc.id,
-                "file_path": str(file_path),
-                "session_id": session_id,
-                "user_id": user.id,
-                "filename": safe_filename,
-            },
-            "job_try": 1,
-            "enqueue_time": _time.time(),
-            "job_id": job_id,
-            "score": None,
-        })
-        # ARQ queues jobs in a Redis sorted set keyed "arq:queue"
-        rc.zadd("arq:queue", {job_payload: _time.time()})
-        import logging
-        logging.getLogger(__name__).info(f"[Upload] Enqueued job {job_id} for doc {doc.id}")
-
+        redis_pool = await create_pool(RedisSettings(host=host, port=int(port), database=db_num))
+        await redis_pool.enqueue_job(
+            "process_session_document",
+            document_id=doc.id,
+            file_path=str(file_path),
+            session_id=session_id,
+            user_id=user.id,
+            filename=safe_filename,
+        )
+        await redis_pool.close()
     except Exception as e:
         # If Redis is down, fall back to synchronous in-process ingestion
         import logging
