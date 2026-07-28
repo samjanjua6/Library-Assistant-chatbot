@@ -262,6 +262,25 @@ export default function ChatPage() {
       }
       return
     }
+    if (data.startsWith('[CHUNKS:')) {
+      const chunksJson = data.replace('[CHUNKS:', '').replace(/\]$/, '')
+      try {
+        const chunks = JSON.parse(chunksJson)
+        setMessages(prev => {
+          const copy = [...prev]
+          for (let i = copy.length - 1; i >= 0; i--) {
+            if (copy[i].type === 'bot') {
+              copy[i] = { ...copy[i], chunks }
+              break
+            }
+          }
+          return copy
+        })
+      } catch (e) {
+        console.error("Failed to parse chunks:", e)
+      }
+      return
+    }
     if (data.startsWith('[DOC_READY:')) {
       try {
         const json = data.replace('[DOC_READY:', '').replace(/\]$/, '')

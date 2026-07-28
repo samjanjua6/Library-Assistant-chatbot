@@ -585,6 +585,21 @@ async def stream_reply(
     # ── Precision / Recall Evaluation ─────────────────────────────────────────
     metrics = await evaluate_retrieval(kb_eval_data["question"], kb_eval_data["chunks"])
     yield f"[METRICS:{json.dumps(metrics)}]"
+    
+    # Send the raw retrieved chunks for the UI reference tab
+    if kb_eval_data["chunks"]:
+        ui_chunks = []
+        for c in kb_eval_data["chunks"]:
+            # Ensure safe string formatting
+            source = c.get("source", "Knowledge Base") if isinstance(c, dict) else "Knowledge Base"
+            section = c.get("section", "") if isinstance(c, dict) else ""
+            text = c.get("text", str(c)) if isinstance(c, dict) else str(c)
+            ui_chunks.append({
+                "source": source,
+                "section": section,
+                "text": text
+            })
+        yield f"[CHUNKS:{json.dumps(ui_chunks)}]"
     # ──────────────────────────────────────────────────────────────────────────
 
 

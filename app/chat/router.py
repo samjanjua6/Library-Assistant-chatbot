@@ -418,7 +418,7 @@ async def chat_socket(
                     active_document_id=active_doc_id,
                     active_session_id=chat_session.id if chat_session else None,
                 ):
-                    if token_chunk.startswith("[USAGE:") or token_chunk.startswith("[STATUS:") or token_chunk.startswith("[METRICS:"):
+                    if token_chunk.startswith("[USAGE:") or token_chunk.startswith("[STATUS:") or token_chunk.startswith("[METRICS:") or token_chunk.startswith("[CHUNKS:"):
                         await websocket.send_text(token_chunk)
                         continue
                     full_reply += token_chunk

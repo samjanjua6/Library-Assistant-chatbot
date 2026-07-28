@@ -70,11 +70,12 @@ function MetricsCard({ metrics }) {
 }
 
 function BotMessageFooter({ msg }) {
-  const [tab, setTab] = useState(null) // null | 'usage' | 'metrics'
+  const [tab, setTab] = useState(null) // null | 'usage' | 'metrics' | 'chunks'
   const hasUsage   = !!msg.usage
   const hasMetrics = !!msg.metrics
+  const hasChunks  = !!msg.chunks && msg.chunks.length > 0
 
-  if (!hasUsage && !hasMetrics) return null
+  if (!hasUsage && !hasMetrics && !hasChunks) return null
 
   const { precision, recall, f1_score, relevant_chunks, total_chunks } = msg.metrics ?? {}
   const hasMetricData = precision !== null && precision !== undefined
@@ -110,6 +111,21 @@ function BotMessageFooter({ msg }) {
             RAG Metrics
           </button>
         )}
+        {hasMetrics && hasChunks && (
+          <span className="text-[10px]" style={{ color: 'var(--border)' }}>|</span>
+        )}
+        {hasChunks && (
+          <button
+            onClick={() => setTab(t => t === 'chunks' ? null : 'chunks')}
+            className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1 outline-none"
+            style={{ color: tab === 'chunks' ? 'var(--text-1)' : 'var(--text-2)' }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+            </svg>
+            References
+          </button>
+        )}
       </div>
 
       {/* Usage panel */}
@@ -137,6 +153,25 @@ function BotMessageFooter({ msg }) {
                 : 'Evaluation unavailable for this response.'}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Chunks panel */}
+      {tab === 'chunks' && (
+        <div className="mt-1.5 p-3 rounded-xl flex flex-col gap-3 max-h-64 overflow-y-auto"
+          style={{ background: 'var(--glass-input)', border: '1px solid var(--border)' }}>
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>📑 Retrieved References</p>
+          {msg.chunks.map((chunk, idx) => (
+            <div key={idx} className="flex flex-col gap-1 pb-2 border-b last:border-b-0" style={{ borderColor: 'var(--border)' }}>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-400 px-1.5 rounded">{chunk.source}</span>
+                {chunk.section && <span className="text-[10px]" style={{ color: 'var(--text-2)' }}>{chunk.section}</span>}
+              </div>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-1)' }}>
+                {chunk.text}
+              </p>
+            </div>
+          ))}
         </div>
       )}
     </div>
