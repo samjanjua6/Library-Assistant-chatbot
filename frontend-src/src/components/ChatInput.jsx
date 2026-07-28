@@ -90,7 +90,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
           ref={fileRef}
           type="file"
           className="hidden"
-          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json"
+          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json,.pptx"
           onChange={handleFileChange}
           aria-label="Upload file"
         />

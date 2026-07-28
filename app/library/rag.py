@@ -179,6 +179,25 @@ def _extract_xlsx(file_path: Path) -> str:
         return ""
 
 
+def _extract_pptx(file_path: Path) -> str:
+    """Extract text from a PowerPoint .pptx file using python-pptx."""
+    try:
+        from pptx import Presentation
+        prs = Presentation(str(file_path))
+        text_runs = []
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    text_runs.append(shape.text)
+        return "\n\n".join(text_runs)
+    except ImportError:
+        print("[RAG] python-pptx not installed. Cannot process .pptx files.")
+        return ""
+    except Exception as e:
+        print(f"[RAG] Error reading PPTX {file_path.name}: {e}")
+        return ""
+
+
 def extract_text(file_path: Path) -> str:
     """Dispatch to the correct extractor based on file extension."""
     ext = file_path.suffix.lower()
@@ -194,6 +213,8 @@ def extract_text(file_path: Path) -> str:
         return _extract_json(file_path)
     elif ext == ".xlsx":
         return _extract_xlsx(file_path)
+    elif ext == ".pptx":
+        return _extract_pptx(file_path)
     else:
         print(f"[RAG] Unsupported file type: {ext}")
         return ""

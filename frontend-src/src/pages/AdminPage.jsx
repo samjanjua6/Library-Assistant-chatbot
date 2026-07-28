@@ -153,7 +153,7 @@ function KnowledgeBaseManager() {
           ref={fileRef}
           type="file"
           multiple
-          accept=".txt,.pdf,.md,.docx,.csv,.json,.xlsx"
+          accept=".txt,.pdf,.md,.docx,.csv,.json,.xlsx,.pptx"
           className="hidden"
           onChange={e => handleUpload(Array.from(e.target.files))}
         />

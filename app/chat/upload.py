@@ -31,6 +31,7 @@ ALLOWED_EXTENSIONS: dict[str, str] = {
     ".md":   "text/plain",
     ".csv":  "text/csv",
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     ".json": "application/json",
 }
 
