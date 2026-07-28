@@ -1,14 +1,62 @@
 # Library Rules and Policies
 
-## Borrowing Limits
-- Each user is permitted to borrow a maximum of 3 books at any given time.
-- Books can be borrowed for a maximum period of 14 days.
+## General Policies & Rules
+- No entry without a valid Library Membership card.
+- Expired cards must be renewed without delay.
+- Male and female members are to sit in their respective study sections/rooms.
+- You must show your bags/objects for inspection on demand of the security guard or Library staff.
+- Library staff is not responsible for personal items which are lost, stolen, or damaged in library premises.
+- Enter 'Check in' at the IN/OUT register while visiting and leaving the library.
+- Eatables are to be consumed in the Café only. Do not bring or eat your food inside the library.
+- Smoking is strictly prohibited inside the Library.
+- Leave personal bags/belongings at the designated place of the Library.
+- Guests/relatives of Library members are not allowed inside the Library.
+- Misbehavior with Library Staff will tantamount to withdrawal of membership.
+- Complete silence should be observed except for brief and subdued talk with library staff.
+- Keep your mobile phones on silent within the library.
+- No mobile phone calls, Skype, video/audio, or making noises inside the library.
+- Damage to Library equipment/facilities will be charged.
+- Any violation of rules will lead to cancellation of membership at any time.
 
-## Late Fees
-- Late fees are applied automatically for any book that is not returned by the due date.
-- The standard late fee is $0.50 per day for each overdue book.
-- If a book is more than 30 days overdue, it will be considered "Lost".
+## Dress Code
+**Male Members:**
+- Clothing: Lounge suit, Safari suit, pant shirt, shalwar qameez.
+- Shoes: Shoes, Joggers, sandals (no chappals or slippers).
 
-## Lost or Damaged Books
-- If a book is deemed Lost, the user's account will be billed for the full replacement cost of the book, plus a $10.00 administrative fee.
-- Books returned with severe water damage, torn pages, or missing covers will be subject to a replacement fee at the discretion of the librarian.
+**Female Members:**
+- Clothing: Shalwar Qameez, Kurta / Full sleeve T-shirt with trousers.
+- Shoes: Shoes, Joggers, sandals (no chappals or slippers).
+
+## Internet Section
+- Library computers are meant for studies and not for business activities, Skype, or online professional services.
+- Internet section timings are 9:00 am to 5:00 pm.
+- No noise or use of Mobile phones inside the internet section.
+- Library internet facility will not be used for immoral, illegal, or anti-Pakistan activities.
+- Watching movies, games, and obscene material is not allowed.
+- Use of computers is allowed free, only to members with a valid library card.
+- Use of internet by a group of members is not allowed.
+- Members are not allowed to interchange computer settings.
+- Members having outstanding fines/dues of the library will be denied the use of computer facility.
+- Food and beverages are not permitted within the library vicinity.
+
+## Reading Sections
+- Male and Female members are not allowed to sit together at one table. Both will be restricted to their own designated sections. The first section will be exclusively reserved for ladies after 5:00 pm.
+- Members are not allowed to take newspapers, journals, and magazines away from the prescribed area.
+
+## Security
+**Car Parking:**
+- Secured parking of vehicles is at your own risk in the Parking Area.
+- Parking of vehicles must be in an orderly manner allowing smooth IN/OUT of vehicles from entry and exit points.
+- No parking is allowed after off timings or during off days.
+
+**Building Security:**
+- Avoid smoking inside the Library.
+- Report if you observe fire, short-circuiting, or loose electric sockets/joints inside the Library to the Library Receptionist or any staff nearby.
+
+**Ethical Security:**
+- Respect each other.
+- No disturbance in any manner to other members.
+- No pestering or staring at female staff and members through direct or indirect approaches.
+
+## Copyright
+- Some items in the Library cannot be copied because of copyright laws, poor condition, or donor restriction.

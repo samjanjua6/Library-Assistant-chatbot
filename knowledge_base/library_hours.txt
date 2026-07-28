@@ -1,16 +1,17 @@
 # Library Operating Hours and Holidays
 
 ## Standard Operating Hours
-- Monday to Friday: 9:00 AM - 8:00 PM
-- Saturday: 10:00 AM - 5:00 PM
-- Sunday: Closed
+- **Monday to Thursday:** 9:00 AM - 5:00 PM
+- **Saturday and Sunday:** 11:00 AM - 7:00 PM
+- **Friday & Gazetted Holidays:** Closed
 
-## Holiday Closures
-The library is closed on all federal holidays, including:
-- New Year's Day
-- Independence Day
-- Thanksgiving Day
-- Christmas Day
+## Section-Specific Timings
+- **Reception and Internet Section:** 9:00 AM to 5:00 PM
+- **Membership Registration:** 9:00 AM to 4:00 PM (Monday to Thursday)
+
+## Lunch Breaks
+- **Standard (Mon-Thu):** 1:00 PM - 2:00 PM (1300 - 1400 hrs)
+- **Friday:** 12:30 PM - 2:00 PM (1230 - 1400 hrs)
 
 ## After-Hours Returns
 Books can be returned after operating hours using the secure drop-box located at the main entrance. Books returned via the drop-box after closing will be processed on the next business day.

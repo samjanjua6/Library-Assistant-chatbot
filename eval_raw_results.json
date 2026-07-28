@@ -1,0 +1,50 @@
+[
+  {
+    "question": "Can I bring guests inside the library?",
+    "expected": "No, guests/relatives are not allowed.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "What happens if a female member stays past 5:00 PM?",
+    "expected": "The first section is exclusively reserved for ladies after 5:00 PM.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "Am I allowed to eat inside the library?",
+    "expected": "No, eatables are consumed in the Caf\u00e9 only.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "What shoes are male members allowed to wear?",
+    "expected": "Shoes, Joggers, sandals. No chappals or slippers.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "Can I use the internet section to run my freelance business?",
+    "expected": "No, library computers are meant for studies and not for business activities.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "Is parking free?",
+    "expected": "The rules state parking is at your own risk, but don't explicitly mention if it's free. Model should clarify it's not stated.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "How much does a new membership card cost?",
+    "expected": "Not stated in the document. Model should say it doesn't know.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  },
+  {
+    "question": "Can I borrow a laptop from the library?",
+    "expected": "Not stated in the document. Model should say it doesn't know.",
+    "actual": "Hello **testuser_eval2@zylo.com**! I am your Library Book Assistant. \ud83d\udcda I am excited to help you search our catalog, check availability, borrow, or return books. How can I help you today?",
+    "chunks": []
+  }
+]

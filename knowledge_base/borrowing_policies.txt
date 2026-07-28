@@ -6,6 +6,13 @@
 - A book is considered "active" from the moment it is borrowed until it is returned.
 - To borrow a 4th book, at least one currently borrowed book must be returned first.
 
+## General Book Conduct & Inspection
+
+- Submit any book or object for inspection when requested by the library staff.
+- Do not write, underline, or mark any library book or tables. Books are carefully examined upon return, and the borrower will be held responsible for any damage.
+- After reading, please leave books on the table. Do not attempt to re-shelve the books yourself.
+- Members are expected to return books on time and in good condition, or promptly pay fines after the due date.
+
 ## Loan Duration
 
 - The standard loan period is 14 days from the date of borrowing.

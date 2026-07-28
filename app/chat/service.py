@@ -609,7 +609,7 @@ async def generate_chat_title(prompt: str) -> str:
     try:
         response = await call_with_retry(
             client.chat.completions.create,
-            model="llama-3.1-8b-instant",
+            model="gemma-4-31b",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates extremely short titles (2-5 words max) for a conversation based on the user's first message. Do NOT use quotes around the title. Do NOT add any preamble. Just output the short title."},
                 {"role": "user", "content": prompt}
