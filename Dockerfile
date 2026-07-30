@@ -6,11 +6,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install system dependencies (needed for compiling some python packages like chromadb/sqlite)
+# Install system dependencies, Node.js, and Notion MCP Server
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libmagic1 \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
+
+RUN npm install @notionhq/notion-mcp-server
 
 # Install python dependencies
 COPY requirements.txt .
