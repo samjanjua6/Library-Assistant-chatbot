@@ -50,18 +50,19 @@ def _fetch_stats() -> dict:
     """
     start, end = _yesterday_range()
     db = SessionLocal()
+    from sqlalchemy.orm import joinedload
     try:
-        new_borrows = db.query(Loan).filter(
+        new_borrows = db.query(Loan).options(joinedload(Loan.book)).filter(
             Loan.borrowed_at >= start,
             Loan.borrowed_at < end,
         ).all()
 
-        returns = db.query(Loan).filter(
+        returns = db.query(Loan).options(joinedload(Loan.book)).filter(
             Loan.returned_at >= start,
             Loan.returned_at < end,
         ).all()
 
-        overdue = db.query(Loan).filter(
+        overdue = db.query(Loan).options(joinedload(Loan.book)).filter(
             Loan.status == "borrowed",
             Loan.due_date < end,
         ).all()
@@ -289,6 +290,22 @@ async def generate_and_email_report(ctx: dict) -> str:
             f"[Report] Email FAILED after {MAX_RETRIES} attempts — {exc}. Giving up."
         )
         raise
+
+    logger.info("[Report] Writing summary to Notion...")
+    try:
+        from ..library.notion_mcp import write_daily_report_to_notion
+        notion_success = await write_daily_report_to_notion(
+            date_str=stats["date"],
+            new_borrows=len(stats["new_borrows"]),
+            returns=len(stats["returns"]),
+            overdue=len(stats["overdue"])
+        )
+        if notion_success:
+            logger.info("[Report] Notion write successful.")
+        else:
+            logger.warning("[Report] Notion write failed or skipped.")
+    except Exception as e:
+        logger.error(f"[Report] Error writing to Notion: {e}")
 
     result = (
         f"Report for {stats['date']}: "

@@ -113,6 +113,18 @@ async def download_report(admin: User = Depends(get_current_admin_user)):
     except Exception as exc:
         logger.error(f"[Report] Manual download email failed: {exc}")
 
+    # Also update Notion
+    try:
+        from ..library.notion_mcp import write_daily_report_to_notion
+        await write_daily_report_to_notion(
+            date_str=stats["date"],
+            new_borrows=len(stats["new_borrows"]),
+            returns=len(stats["returns"]),
+            overdue=len(stats["overdue"])
+        )
+    except Exception as exc:
+        logger.error(f"[Report] Manual download Notion write failed: {exc}")
+
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",

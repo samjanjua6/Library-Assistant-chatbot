@@ -100,3 +100,109 @@ async def search_notion_policy(query: str) -> str | None:
             for sub_e in e.exceptions:
                 logger.error(f"Sub-exception: {sub_e}")
         return None
+
+async def write_daily_report_to_notion(date_str: str, new_borrows: int, returns: int, overdue: int) -> bool:
+    """
+    Connect to Notion MCP, find 'Daily Library Reports' database/page, and append a daily summary.
+    Returns True if successful, False otherwise.
+    """
+    if not settings.NOTION_API_TOKEN:
+        logger.warning("NOTION_API_TOKEN is not set. Skipping Notion daily report write.")
+        return False
+
+    env = os.environ.copy()
+    env["NOTION_API_TOKEN"] = settings.NOTION_API_TOKEN
+    env["NOTION_TOKEN"] = settings.NOTION_API_TOKEN
+    env["NOTION_API_KEY"] = settings.NOTION_API_TOKEN
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    bin_path = os.path.join(base_dir, "node_modules", "@notionhq", "notion-mcp-server", "bin", "cli.mjs")
+    
+    server_params = StdioServerParameters(
+        command="node",
+        args=[bin_path],
+        env=env
+    )
+
+    try:
+        success = False
+        async with stdio_client(server_params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                tools_response = await session.list_tools()
+                
+                # Search for the parent page/database
+                search_tool = next((t for t in tools_response.tools if "post-search" in t.name.lower()), None)
+                if not search_tool:
+                    logger.error("No search tool found in Notion MCP server.")
+                    return False
+
+                search_res = await session.call_tool(search_tool.name, arguments={"query": "Daily Library Reports"})
+                
+                if search_res.is_error:
+                    logger.error(f"Notion MCP search error: {search_res.content}")
+                else:
+                    text_content = [c.text for c in search_res.content if c.type == "text"]
+                    extracted = "\n".join(text_content).strip()
+                    
+                    data = json.loads(extracted)
+                    results = data.get("results", [])
+                    if not results:
+                        logger.warning("Could not find 'Daily Library Reports' in Notion. Please create it and share it with your integration.")
+                    else:
+                        parent_obj = results[0]
+                        parent_id = parent_obj.get("id")
+                        parent_type = "database_id" if parent_obj.get("object") == "database" else "page_id"
+
+                        # Create the page
+                        post_page_tool = next((t for t in tools_response.tools if "post-page" in t.name.lower()), None)
+                        if not post_page_tool:
+                            logger.error("No post-page tool found.")
+                        else:
+                            args = {
+                                "parent": {
+                                    "type": parent_type,
+                                    parent_type: parent_id
+                                },
+                                "properties": {
+                                    "title": {
+                                        "title": [
+                                            {"type": "text", "text": {"content": f"Daily Summary - {date_str}"}}
+                                        ]
+                                    }
+                                },
+                                "children": [
+                                    {
+                                        "type": "paragraph",
+                                        "paragraph": {
+                                            "rich_text": [{"type": "text", "text": {"content": f"📚 Books Borrowed: {new_borrows}"}}]
+                                        }
+                                    },
+                                    {
+                                        "type": "paragraph",
+                                        "paragraph": {
+                                            "rich_text": [{"type": "text", "text": {"content": f"📥 Books Returned: {returns}"}}]
+                                        }
+                                    },
+                                    {
+                                        "type": "paragraph",
+                                        "paragraph": {
+                                            "rich_text": [{"type": "text", "text": {"content": f"⚠️ Overdue Today: {overdue}"}}]
+                                        }
+                                    }
+                                ]
+                            }
+                            
+                            create_res = await session.call_tool(post_page_tool.name, arguments=args)
+                            if create_res.is_error:
+                                logger.error(f"Error creating Notion page: {create_res.content}")
+                            else:
+                                logger.info(f"Successfully wrote daily report to Notion for {date_str}.")
+                                success = True
+        return success
+    except Exception as e:
+        logger.error(f"Failed to communicate with Notion MCP while writing report: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
