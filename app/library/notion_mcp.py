@@ -20,6 +20,7 @@ async def search_notion_policy(query: str) -> str | None:
     env["NOTION_API_TOKEN"] = settings.NOTION_API_TOKEN
     env["NOTION_TOKEN"] = settings.NOTION_API_TOKEN
     env["NOTION_API_KEY"] = settings.NOTION_API_TOKEN
+    env["NODE_OPTIONS"] = "--dns-result-order=ipv4first"
 
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     bin_path = os.path.join(base_dir, "node_modules", "@notionhq", "notion-mcp-server", "bin", "cli.mjs")
@@ -114,6 +115,7 @@ async def write_daily_report_to_notion(date_str: str, new_borrows: int, returns:
     env["NOTION_API_TOKEN"] = settings.NOTION_API_TOKEN
     env["NOTION_TOKEN"] = settings.NOTION_API_TOKEN
     env["NOTION_API_KEY"] = settings.NOTION_API_TOKEN
+    env["NODE_OPTIONS"] = "--dns-result-order=ipv4first"
 
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     bin_path = os.path.join(base_dir, "node_modules", "@notionhq", "notion-mcp-server", "bin", "cli.mjs")
