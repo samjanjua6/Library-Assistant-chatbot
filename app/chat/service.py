@@ -429,14 +429,33 @@ async def run_policy_agent(query: str, user_id: int) -> tuple[str, list]:
             if msg.tool_calls:
                 messages.append(msg)
                 for tc in msg.tool_calls:
-                    res = execute_tool(tc.function.name, tc.function.arguments, user_id)
                     if tc.function.name == "search_knowledge_base":
+                        try:
+                            args = json.loads(tc.function.arguments)
+                        except Exception:
+                            args = {}
+                        tool_query = args.get("query", query)
+                        
+                        from ..library.notion_mcp import search_notion_policy
+                        notion_res = await search_notion_policy(tool_query)
+                        
+                        if notion_res:
+                            res = json.dumps({
+                                "status": "success",
+                                "results": [{"source": "Notion Live Policy", "section": "Notion Page", "text": notion_res}]
+                            })
+                        else:
+                            res = execute_tool(tc.function.name, tc.function.arguments, user_id)
+
                         try:
                             parsed = json.loads(res)
                             if parsed.get("status") == "success":
                                 kb_chunks.extend(parsed.get("results", []))
                         except Exception:
                             pass
+                    else:
+                        res = execute_tool(tc.function.name, tc.function.arguments, user_id)
+
                     messages.append({"role": "tool", "tool_call_id": tc.id, "content": res})
             else:
                 return msg.content or "Task complete.", kb_chunks

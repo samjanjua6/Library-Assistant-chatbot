@@ -143,6 +143,7 @@ async def upload_session_document(
     # Enqueue ARQ background job
     try:
         from arq import create_pool  # pyrefly: ignore [missing-import]
+        # pyrefly: ignore [missing-import]
         from arq.connections import RedisSettings
         from ..core.config import settings as app_settings
 
