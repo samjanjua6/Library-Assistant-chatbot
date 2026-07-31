@@ -16,7 +16,8 @@ def get_ocr_engine():
             logger.info("Initializing PaddleOCR engine (CPU)...")
             # lang='en' downloads english models. 
             # use_angle_cls=True is good for rotated book covers or receipts.
-            _ocr_engine = PaddleOCR(use_angle_cls=True, lang='en')
+            # enable_mkldnn=False fixes a known CPU crash in PaddlePaddle 3.0+
+            _ocr_engine = PaddleOCR(use_angle_cls=True, lang='en', enable_mkldnn=False)
             logger.info("PaddleOCR engine initialized successfully.")
         except Exception as e:
             logger.error(f"Failed to initialize PaddleOCR: {e}")
