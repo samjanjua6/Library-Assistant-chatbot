@@ -14,12 +14,20 @@ const PaperclipIcon = () => (
 )
 
 const MAX_BYTES = 20 * 1024 * 1024   // 20 MB
-const ALLOWED_EXTS = new Set(['.pdf', '.docx', '.txt', '.md', '.csv', '.xlsx', '.json'])
+const ALLOWED_EXTS = new Set(['.pdf', '.docx', '.txt', '.md', '.csv', '.xlsx', '.json', '.jpg', '.jpeg', '.png', '.webp'])
 
-export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload, sessionId }) {
+export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload, sessionId, autoFillText, setAutoFillText }) {
   const inputRef  = useRef(null)
   const fileRef   = useRef(null)
   const [fileErr, setFileErr] = useState('')
+
+  // If the parent component passes autoFillText, inject it into the input box
+  if (autoFillText && inputRef.current) {
+    const currentVal = inputRef.current.value
+    inputRef.current.value = currentVal ? currentVal + '\n\n' + autoFillText : autoFillText
+    setAutoFillText('') // Clear it so it doesn't loop
+    inputRef.current.focus()
+  }
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -69,7 +77,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
   return (
     <footer
       className="shrink-0 px-6 pb-6 pt-3"
-      style={{ borderTop: '1px solid var(--border)', background: 'var(--glass-bg)', backdropFilter: 'blur(20px)' }}
+      style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }}
     >
       {fileErr && (
         <p className="text-xs text-rose-400 text-center mb-2 animate-pulse">{fileErr}</p>
@@ -80,7 +88,6 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
         style={{
           background:  'var(--glass-input)',
           border:      '1px solid var(--border)',
-          backdropFilter: 'blur(16px)',
         }}
         onFocusCapture={e => e.currentTarget.style.borderColor = 'rgba(52,152,219,0.45)'}
         onBlurCapture={e =>  e.currentTarget.style.borderColor = 'var(--border)'}
@@ -90,7 +97,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
           ref={fileRef}
           type="file"
           className="hidden"
-          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json,.pptx"
+          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json,.pptx,.jpg,.jpeg,.png,.webp"
           onChange={handleFileChange}
           aria-label="Upload file"
         />

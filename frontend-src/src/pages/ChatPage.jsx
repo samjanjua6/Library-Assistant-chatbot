@@ -101,6 +101,7 @@ export default function ChatPage() {
   const [activeDocumentName, setActiveDocumentName] = useState('')
   const [uploadStatus, setUploadStatus] = useState(null) // null | 'uploading' | 'processing' | 'ready' | 'failed'
   const [uploadError, setUploadError] = useState('')
+  const [autoFillText, setAutoFillText] = useState('')
   const docPollRef = useRef(null)
 
   // Fetch all sessions on mount
@@ -349,6 +350,40 @@ export default function ChatPage() {
   // ── File upload handler ─────────────────────────────────────────────────────
   const handleFileUpload = useCallback(async (file) => {
     if (!activeSessionId) return
+
+    // 1. Image OCR handling
+    if (file.type.startsWith('image/')) {
+      setUploadStatus('uploading')
+      setUploadError('')
+      setActiveDocumentName(file.name)
+      
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      try {
+        const res = await fetch(`/api/chat/sessions/${activeSessionId}/upload-image`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData,
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setUploadStatus('failed')
+          setUploadError(data.detail || 'Image OCR failed.')
+          return
+        }
+        
+        // Success
+        setAutoFillText(data.text)
+        setUploadStatus(null) // clear status pill since we are done
+      } catch (err) {
+        setUploadStatus('failed')
+        setUploadError('Network error during image upload.')
+      }
+      return
+    }
+
+    // 2. RAG Document handling
     setUploadStatus('uploading')
     setUploadError('')
     setActiveDocumentId(null)
@@ -503,6 +538,8 @@ export default function ChatPage() {
             isStreaming={isStreaming}
             onFileUpload={handleFileUpload}
             sessionId={activeSessionId}
+            autoFillText={autoFillText}
+            setAutoFillText={setAutoFillText}
           />
         </div>
       </div>

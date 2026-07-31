@@ -285,6 +285,40 @@ def delete_session_document(
     return {"success": True, "message": f"Deleted document '{doc.original_filename}'."}
 
 
+@router.post("/api/chat/sessions/{session_id}/upload-image")
+async def upload_session_image(
+    session_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Upload an image for OCR text extraction.
+    Returns the extracted text.
+    """
+    # Verify session ownership
+    session = db.scalar(
+        select(ChatSession).where(ChatSession.id == session_id, ChatSession.user_id == user.id)
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found.")
+
+    # Validate it's an image
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
+
+    # Read file bytes
+    data = await file.read()
+    
+    # Run OCR
+    try:
+        from ..library.ocr import extract_text_from_image
+        extracted_text = extract_text_from_image(data)
+        return {"success": True, "text": extracted_text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OCR processing failed: {str(e)}")
+
+
 # ── WebSocket Chat ─────────────────────────────────────────────────────────────
 
 @router.websocket("/ws/chat")
