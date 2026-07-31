@@ -38,7 +38,7 @@ def extract_text_from_image(file_bytes: bytes) -> str:
             f.write(file_bytes)
         
         # Run inference
-        result = engine.ocr(temp_path, cls=True)
+        result = engine.ocr(temp_path)
         
         if not result or result[0] is None:
             return ""
