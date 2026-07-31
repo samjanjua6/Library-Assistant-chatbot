@@ -5,39 +5,41 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Merriweather', 'serif'], // Added a serif for elegant library typography
       },
       colors: {
-        canvas:  '#0c0e17',
-        surface: '#13161f',
-        edge:    '#1a1d2e',
-        ridge:   '#232740',
-        indigo: {
-          50: '#ebf5fb',
-          100: '#d6eaf8',
-          200: '#aed6f1',
-          300: '#85c1e9',
-          400: '#3498DB', // Primary Sky Blue
-          500: '#2980B9',
-          600: '#2471a3',
-          700: '#1f618d',
-          800: '#1a5276',
-          900: '#154360',
+        canvas:  '#f8f9fa', // Soft off-white paper background
+        surface: '#ffffff', // Pure white cards
+        edge:    '#e9ecef', // Light grey borders
+        ridge:   '#dee2e6', // Slightly darker borders
+        primary: {
+          50: '#f0f4f8',
+          100: '#d9e2ec',
+          200: '#bcccdc',
+          300: '#9fb3c8',
+          400: '#829ab1',
+          500: '#627d98', // Soft slate blue
+          600: '#486581',
+          700: '#334e68',
+          800: '#243b53',
+          900: '#102a43', // Deep navy for headings
         },
-        violet: {
-          50: '#fefde8',
-          100: '#fef9c3',
-          200: '#fef08a',
-          300: '#fde047',
-          400: '#F1C40F', // Secondary Sunshine Yellow
-          500: '#d4ac0d',
-          600: '#ca8a04',
-          700: '#a16207',
-          800: '#854d0e',
-          900: '#713f12',
+        accent: {
+          50: '#fdf3ea',
+          100: '#fbe2c7',
+          200: '#f8cda0',
+          300: '#f5b575',
+          400: '#f29c49',
+          500: '#ef821d', // Warm orange/sepia highlight
+          600: '#cf6c12',
+          700: '#aa550d',
+          800: '#84400a',
+          900: '#612d08',
         }
       },
       boxShadow: {
-        card: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
+        card: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+        floating: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       },
       keyframes: {
         fadeUp: {
@@ -54,7 +56,7 @@ export default {
         fadeIn: 'fadeIn 0.2s ease forwards',
       },
       backgroundImage: {
-        'mesh-dark': "radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%)",
+        'mesh-light': "radial-gradient(at 0% 0%, rgba(239,130,29,0.05) 0, transparent 50%), radial-gradient(at 100% 0%, rgba(98,125,152,0.05) 0, transparent 50%)",
       }
     },
   },

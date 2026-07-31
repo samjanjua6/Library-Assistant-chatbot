@@ -4,8 +4,8 @@ import { Cpu, Terminal, Layers, Database, Sparkles } from 'lucide-react'
 const glass = {
   background:    'var(--glass-bg)',
   border:        '1px solid var(--border)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
+  
+  
 }
 
 export default function TechSection() {
@@ -52,10 +52,10 @@ export default function TechSection() {
           <h2 className="text-xs font-semibold tracking-widest uppercase mb-3 bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
             Technology
           </h2>
-          <h3 className="text-3xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-1)' }}>
+          <h3 className="text-primary-500xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary-900)' }}>
             A Modern, Asynchronous Stack.
           </h3>
-          <p className="text-md md:text-lg max-w-2xl mx-auto font-light leading-relaxed" style={{ color: 'var(--text-2)' }}>
+          <p className="text-md md:text-lg max-w-2xl mx-auto font-light leading-relaxed" style={{ color: 'var(--text-primary-700)' }}>
             Engineered with cutting-edge tools for fast, reactive, and reliable performance.
           </p>
         </motion.div>
@@ -78,17 +78,17 @@ export default function TechSection() {
                 >
                   {group.icon}
                 </div>
-                <h4 className="font-bold text-lg" style={{ color: 'var(--text-1)' }}>{group.category}</h4>
+                <h4 className="font-bold text-lg" style={{ color: 'var(--text-primary-900)' }}>{group.category}</h4>
               </div>
 
               <div className="flex flex-col gap-5">
                 {group.items.map((item, idx) => (
                   <div key={idx} className="flex flex-col gap-1 pl-1">
-                    <h5 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
+                    <h5 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary-900)' }}>
                       <Sparkles size={12} className="text-indigo-400 opacity-60" />
                       {item.name}
                     </h5>
-                    <p className="text-xs font-light leading-relaxed pl-5" style={{ color: 'var(--text-2)' }}>
+                    <p className="text-xs font-light leading-relaxed pl-5" style={{ color: 'var(--text-primary-700)' }}>
                       {item.desc}
                     </p>
                   </div>

@@ -4,48 +4,48 @@
 
 /* ─── Theme token definitions ──────────────────────────────────────────────── */
 
-/* Light (default) now forces the premium dark glassmorphism look to match the Landing Page */
+/* Light (Elegant Theme) */
 :root {
-  --canvas:       #020617; /* slate-950 */
+  --canvas:       #f8f9fa; /* Light paper */
   --mesh-a:       transparent;
   --mesh-b:       transparent;
   --mesh-c:       transparent;
 
-  --glass-bg:     rgba(255, 255, 255, 0.05);
-  --glass-hi:     rgba(255, 255, 255, 0.1);
-  --glass-input:  rgba(255, 255, 255, 0.03);
+  --glass-bg:     #ffffff; /* Solid white background instead of glass */
+  --glass-hi:     #f8f9fa; /* Slight off-white for hover */
+  --glass-input:  #ffffff; /* Solid white for inputs */
 
-  --border:       rgba(255, 255, 255, 0.2);
-  --border-s:     rgba(255, 255, 255, 0.1);
+  --border:       #e9ecef; /* Light gray border */
+  --border-s:     #dee2e6; /* Slightly darker border */
 
-  --text-1:       #FFFFFF;
-  --text-2:       rgba(255, 255, 255, 0.7);
-  --text-3:       rgba(255, 255, 255, 0.4);
+  --text-1:       #102a43; /* Deep navy text */
+  --text-2:       #334e68; /* Slate text */
+  --text-3:       #829ab1; /* Light gray text */
 
-  --shadow:       inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 32px rgba(0,0,0,0.5);
+  --shadow:       0 1px 3px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
 
-  --pill-active:  rgba(255, 255, 255, 0.1);
+  --pill-active:  rgba(98, 125, 152, 0.1);
 }
 
-/* Dark (alternative) uses the same premium look */
+/* Dark theme overrides (if user forces dark mode, we provide a clean dark look) */
 [data-theme="dark"] {
-  --canvas:       #020617;
+  --canvas:       #102a43;
   --mesh-a:       transparent;
   --mesh-b:       transparent;
   --mesh-c:       transparent;
 
-  --glass-bg:     rgba(255, 255, 255, 0.05);
-  --glass-hi:     rgba(255, 255, 255, 0.1);
-  --glass-input:  rgba(255, 255, 255, 0.03);
+  --glass-bg:     #243b53;
+  --glass-hi:     #334e68;
+  --glass-input:  #102a43;
 
-  --border:       rgba(255, 255, 255, 0.2);
-  --border-s:     rgba(255, 255, 255, 0.1);
+  --border:       #334e68;
+  --border-s:     #486581;
 
-  --text-1:       #FFFFFF;
-  --text-2:       rgba(255, 255, 255, 0.7);
-  --text-3:       rgba(255, 255, 255, 0.4);
+  --text-1:       #ffffff;
+  --text-2:       #d9e2ec;
+  --text-3:       #829ab1;
 
-  --shadow:       inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 32px rgba(0,0,0,0.5);
+  --shadow:       0 1px 3px rgba(0,0,0,0.2), 0 10px 15px -3px rgba(0,0,0,0.3);
 
   --pill-active:  rgba(255, 255, 255, 0.1);
 }

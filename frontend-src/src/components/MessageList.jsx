@@ -10,7 +10,7 @@ function MetricsBar({ label, value, color }) {
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex justify-between items-center">
-        <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-2)' }}>{label}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-primary-700)' }}>{label}</span>
         <span className={`text-[10px] font-bold ${pct === null ? 'text-gray-500' : pct >= 75 ? 'text-emerald-400' : pct >= 45 ? 'text-amber-400' : 'text-rose-400'}`}>
           {pct === null ? 'N/A' : `${pct}%`}
         </span>
@@ -37,7 +37,7 @@ function MetricsCard({ metrics }) {
       <button
         onClick={() => setOpen(o => !o)}
         className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1.5 outline-none"
-        style={{ color: 'var(--text-2)' }}
+        style={{ color: 'var(--text-primary-700)' }}
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="20" x2="18" y2="10" />
@@ -52,12 +52,12 @@ function MetricsCard({ metrics }) {
           className="mt-1.5 p-3 rounded-xl flex flex-col gap-2"
           style={{ background: 'var(--glass-input)', border: '1px solid var(--border)' }}
         >
-          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>📊 RAG Retrieval Evaluation</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary-700)' }}>📊 RAG Retrieval Evaluation</p>
           <MetricsBar label="Precision" value={precision} />
           <MetricsBar label="Recall" value={recall} />
           <MetricsBar label="F1 Score" value={f1_score} />
           <div className="pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--text-primary-700)' }}>
               {hasData
                 ? <>{relevant_chunks} of {total_chunks} retrieved chunks were <span className="text-emerald-400 font-semibold">relevant</span></>
                 : 'Evaluation unavailable for this response.'}
@@ -88,7 +88,7 @@ function BotMessageFooter({ msg }) {
           <button
             onClick={() => setTab(t => t === 'usage' ? null : 'usage')}
             className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1 outline-none"
-            style={{ color: tab === 'usage' ? 'var(--text-1)' : 'var(--text-2)' }}
+            style={{ color: tab === 'usage' ? 'var(--text-primary-900)' : 'var(--text-primary-700)' }}
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
@@ -103,7 +103,7 @@ function BotMessageFooter({ msg }) {
           <button
             onClick={() => setTab(t => t === 'metrics' ? null : 'metrics')}
             className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1 outline-none"
-            style={{ color: tab === 'metrics' ? 'var(--text-1)' : 'var(--text-2)' }}
+            style={{ color: tab === 'metrics' ? 'var(--text-primary-900)' : 'var(--text-primary-700)' }}
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -118,7 +118,7 @@ function BotMessageFooter({ msg }) {
           <button
             onClick={() => setTab(t => t === 'chunks' ? null : 'chunks')}
             className="text-[10px] uppercase font-bold tracking-wider hover:opacity-85 transition-opacity flex items-center gap-1 outline-none"
-            style={{ color: tab === 'chunks' ? 'var(--text-1)' : 'var(--text-2)' }}
+            style={{ color: tab === 'chunks' ? 'var(--text-primary-900)' : 'var(--text-primary-700)' }}
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
@@ -131,7 +131,7 @@ function BotMessageFooter({ msg }) {
       {/* Usage panel */}
       {tab === 'usage' && (
         <div className="mt-1.5 p-2 rounded-lg text-[10px] font-mono flex flex-col gap-0.5"
-          style={{ background: 'var(--glass-input)', border: '1px solid var(--border)', color: 'var(--text-1)' }}>
+          style={{ background: 'var(--glass-input)', border: '1px solid var(--border)', color: 'var(--text-primary-900)' }}>
           <div>Prompt Tokens: <span className="font-semibold text-sky-500">{msg.usage.prompt_tokens}</span></div>
           <div>Completion Tokens: <span className="font-semibold text-sky-500">{msg.usage.completion_tokens}</span></div>
           <div>Estimated Cost: <span className="font-semibold text-emerald-500">${msg.usage.cost.toFixed(6)}</span></div>
@@ -142,12 +142,12 @@ function BotMessageFooter({ msg }) {
       {tab === 'metrics' && (
         <div className="mt-1.5 p-3 rounded-xl flex flex-col gap-2"
           style={{ background: 'var(--glass-input)', border: '1px solid var(--border)' }}>
-          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>📊 RAG Retrieval Evaluation</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary-700)' }}>📊 RAG Retrieval Evaluation</p>
           <MetricsBar label="Precision" value={hasMetricData ? precision : null} />
           <MetricsBar label="Recall"    value={hasMetricData ? recall    : null} />
           <MetricsBar label="F1 Score"  value={hasMetricData ? f1_score  : null} />
           <div className="pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>
+            <p className="text-[10px]" style={{ color: 'var(--text-primary-700)' }}>
               {hasMetricData
                 ? <>{relevant_chunks} of {total_chunks} retrieved chunks were <span className="text-emerald-400 font-semibold">relevant</span></>
                 : 'Evaluation unavailable for this response.'}
@@ -160,14 +160,14 @@ function BotMessageFooter({ msg }) {
       {tab === 'chunks' && (
         <div className="mt-1.5 p-3 rounded-xl flex flex-col gap-3 max-h-64 overflow-y-auto"
           style={{ background: 'var(--glass-input)', border: '1px solid var(--border)' }}>
-          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>📑 Retrieved References</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary-700)' }}>📑 Retrieved References</p>
           {msg.chunks.map((chunk, idx) => (
             <div key={idx} className="flex flex-col gap-1 pb-2 border-b last:border-b-0" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-400 px-1.5 rounded">{chunk.source}</span>
-                {chunk.section && <span className="text-[10px]" style={{ color: 'var(--text-2)' }}>{chunk.section}</span>}
+                {chunk.section && <span className="text-[10px]" style={{ color: 'var(--text-primary-700)' }}>{chunk.section}</span>}
               </div>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-1)' }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-primary-900)' }}>
                 {chunk.text}
               </p>
             </div>
@@ -237,8 +237,8 @@ function BotIntro() {
   return (
     <div className="flex flex-col items-center justify-center flex-1 text-center py-16 gap-4">
       <div className="text-5xl leading-none" aria-hidden>🤖</div>
-      <h1 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>Zylo Library Assistant</h1>
-      <p className="text-sm max-w-xs" style={{ color: 'var(--text-2)' }}>
+      <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary-900)' }}>Zylo Library Assistant</h1>
+      <p className="text-sm max-w-xs" style={{ color: 'var(--text-primary-700)' }}>
         Your personal library assistant is ready. Send a message to search for books, check availability, or manage loans.
       </p>
     </div>
@@ -252,7 +252,7 @@ function Message({ msg, username }) {
       <div className="flex justify-center">
         <span
           className="text-xs rounded-lg px-3 py-1.5"
-          style={{ color: 'var(--text-2)', border: '1px solid var(--border)', background: 'var(--glass-bg)' }}
+          style={{ color: 'var(--text-primary-700)', border: '1px solid var(--border)', background: 'var(--glass-bg)' }}
         >
           {msg.text}
         </span>
@@ -271,7 +271,7 @@ function Message({ msg, username }) {
         style={
           isUser
             ? { background: 'linear-gradient(135deg,#3498DB,#2980B9)', color: '#fff' }
-            : { background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-1)', fontSize: '1rem' }
+            : { background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-primary-900)', fontSize: '1rem' }
         }
         aria-hidden
       >
@@ -286,14 +286,14 @@ function Message({ msg, username }) {
             ? {
                 background:  'rgba(52,152,219,0.18)',
                 border:      '1px solid rgba(52,152,219,0.25)',
-                color:       'var(--text-1)',
+                color:       'var(--text-primary-900)',
                 borderBottomRightRadius: '4px',
               }
             : {
                 background:  'var(--glass-bg)',
-                backdropFilter: 'blur(12px)',
+                
                 border:      '1px solid var(--border)',
-                color:       'var(--text-1)',
+                color:       'var(--text-primary-900)',
                 borderBottomLeftRadius: '4px',
               }
         }
@@ -301,7 +301,7 @@ function Message({ msg, username }) {
         {formatMessageText(msg.text)}
         {/* Blinking cursor while streaming */}
         {msg.streaming && (
-          <span className="inline-block w-0.5 h-3.5 ml-0.5 align-middle rounded-sm animate-pulse" style={{ background: 'var(--text-2)' }} />
+          <span className="inline-block w-0.5 h-3.5 ml-0.5 align-middle rounded-sm animate-pulse" style={{ background: 'var(--text-primary-700)' }} />
         )}
 
         {/* Unified footer: Usage & Cost + RAG Metrics */}
@@ -332,7 +332,7 @@ export default function MessageList({ messages, username, toolStatus }) {
         <div className="flex items-end gap-2.5">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 font-semibold"
-            style={{ background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-1)', fontSize: '1rem' }}
+            style={{ background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-primary-900)', fontSize: '1rem' }}
             aria-hidden
           >
             🤖
@@ -341,9 +341,9 @@ export default function MessageList({ messages, username, toolStatus }) {
             className="max-w-[70%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed space-y-1 flex items-center gap-3"
             style={{
                 background:  'var(--glass-bg)',
-                backdropFilter: 'blur(12px)',
+                
                 border:      '1px solid var(--border)',
-                color:       'var(--text-1)',
+                color:       'var(--text-primary-900)',
                 borderBottomLeftRadius: '4px',
             }}
           >
@@ -352,7 +352,7 @@ export default function MessageList({ messages, username, toolStatus }) {
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
             </div>
-            <span className="italic" style={{ color: 'var(--text-2)' }}>{toolStatus}</span>
+            <span className="italic" style={{ color: 'var(--text-primary-700)' }}>{toolStatus}</span>
           </div>
         </div>
       )}

@@ -4,8 +4,8 @@ import { Zap, MessageSquare, Sidebar, SunMoon, Code2 } from 'lucide-react'
 const glass = {
   background:    'var(--glass-bg)',
   border:        '1px solid var(--border)',
-  backdropFilter:'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
+  
+  
 }
 
 const cardVariants = {
@@ -55,10 +55,10 @@ export default function FeaturesSection() {
           <h2 className="text-xs font-semibold tracking-widest uppercase mb-3 bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
             Features
           </h2>
-          <h3 className="text-3xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-1)' }}>
+          <h3 className="text-primary-500xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary-900)' }}>
             Engineered for Speed. <br className="hidden md:inline" />Crafted for Simplicity.
           </h3>
-          <p className="text-md md:text-lg max-w-2xl mx-auto font-light leading-relaxed" style={{ color: 'var(--text-2)' }}>
+          <p className="text-md md:text-lg max-w-2xl mx-auto font-light leading-relaxed" style={{ color: 'var(--text-primary-700)' }}>
             A lightweight design that hides powerful features under the hood. Experience messaging the way it was meant to be.
           </p>
         </motion.div>
@@ -84,8 +84,8 @@ export default function FeaturesSection() {
               >
                 {feat.icon}
               </div>
-              <h4 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{feat.title}</h4>
-              <p className="text-sm font-light leading-relaxed" style={{ color: 'var(--text-2)' }}>{feat.description}</p>
+              <h4 className="text-lg font-bold" style={{ color: 'var(--text-primary-900)' }}>{feat.title}</h4>
+              <p className="text-sm font-light leading-relaxed" style={{ color: 'var(--text-primary-700)' }}>{feat.description}</p>
             </motion.div>
           ))}
         </div>

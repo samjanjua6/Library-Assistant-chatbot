@@ -18,8 +18,8 @@ const itemVariants = {
 const glass = {
   background:    'var(--glass-bg)',
   border:        '1px solid var(--border)',
-  backdropFilter:'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
+  
+  
 }
 
 export default function Hero() {
@@ -31,7 +31,7 @@ export default function Hero() {
         animate="visible"
         whileHover={{ y: -5 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center p-8 md:p-16 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]"
+        className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center p-8 md:p-16 rounded-[2.5rem] bg-white  border border-edge shadow-card"
       >
         {/* Live badge */}
         <motion.div
@@ -40,7 +40,7 @@ export default function Hero() {
           className="mb-8 flex items-center gap-2 px-4 py-1.5 rounded-full"
         >
           <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-medium tracking-wide uppercase" style={{ color: 'var(--text-2)' }}>
+          <span className="text-xs font-medium tracking-wide uppercase" style={{ color: 'var(--text-primary-700)' }}>
             Zylo v2.1 with CI/CD is LIVE! 🚀
           </span>
         </motion.div>
@@ -49,7 +49,7 @@ export default function Hero() {
         <motion.h1
           variants={itemVariants}
           className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 leading-[1.05]"
-          style={{ color: 'var(--text-1)' }}
+          style={{ color: 'var(--text-primary-900)' }}
         >
           Manage your books with{' '}
           <br />
@@ -61,7 +61,7 @@ export default function Hero() {
         <motion.p
           variants={itemVariants}
           className="text-lg md:text-xl max-w-2xl mb-12 font-light leading-relaxed"
-          style={{ color: 'var(--text-2)' }}
+          style={{ color: 'var(--text-primary-700)' }}
         >
           Your personal Library Book Assistant. Search the catalog, check availability, borrow, and return books seamlessly through natural conversation.
         </motion.p>
@@ -72,7 +72,7 @@ export default function Hero() {
             <motion.button
               whileHover={{ scale: 1.02, opacity: 0.92 }}
               whileTap={{ scale: 0.98 }}
-              className="group flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white"
+              className="group flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-primary-900"
               style={{ background: 'linear-gradient(135deg, #3498DB, #2980B9)', boxShadow: '0 4px 20px rgba(52, 152, 219, 0.35)' }}
             >
               Start Chatting
@@ -84,7 +84,7 @@ export default function Hero() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              style={{ ...glass, color: 'var(--text-1)' }}
+              style={{ ...glass, color: 'var(--text-primary-900)' }}
               className="flex items-center gap-2 px-8 py-4 rounded-2xl font-medium"
             >
               View on GitHub
@@ -103,7 +103,7 @@ export default function Hero() {
               key={i}
               whileHover={{ scale: 1.03, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}
               style={{ ...glass }}
-              className="flex flex-col items-center gap-3 p-6 rounded-3xl cursor-default border border-white/10"
+              className="flex flex-col items-center gap-3 p-6 rounded-3xl cursor-default border border-edge"
             >
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -111,7 +111,7 @@ export default function Hero() {
               >
                 {item.icon}
               </div>
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{item.label}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary-900)' }}>{item.label}</p>
             </motion.div>
           ))}
         </motion.div>

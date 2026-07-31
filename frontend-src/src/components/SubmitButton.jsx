@@ -11,7 +11,7 @@ export default function SubmitButton({ children, loading }) {
       whileTap={{ scale: 0.98 }}
       type="submit"
       disabled={loading}
-      className="w-full mt-2 py-3 rounded-xl text-[0.93rem] font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full mt-2 py-3 rounded-xl text-[0.93rem] font-semibold text-primary-900 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         background:  'linear-gradient(135deg, #3498DB, #2980B9)',
         boxShadow:   '0 4px 20px rgba(52, 152, 219, 0.35)',

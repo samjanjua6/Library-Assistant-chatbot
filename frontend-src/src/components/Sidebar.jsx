@@ -60,19 +60,19 @@ export default function Sidebar({
         opacity: isOpen ? 1 : 0,
         borderRight: isOpen ? '1px solid var(--border)' : '0px solid transparent',
         background: 'var(--glass-bg)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        
+        
       }}
     >
       <div className="w-64 h-full flex flex-col">
         <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-1)' }}>Chat History</h2>
+          <h2 className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary-900)' }}>Chat History</h2>
           <button
             onClick={onNewSession}
-            className="p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white transition-colors"
             title="New Chat"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-1)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary-900)' }}>
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -87,7 +87,7 @@ export default function Sidebar({
                 className="w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate pr-8"
                 style={{
                   background: activeSessionId === session.id ? 'var(--input-bg)' : 'transparent',
-                  color: activeSessionId === session.id ? 'var(--text-1)' : 'var(--text-2)',
+                  color: activeSessionId === session.id ? 'var(--text-primary-900)' : 'var(--text-primary-700)',
                   border: activeSessionId === session.id ? '1px solid var(--border)' : '1px solid transparent'
                 }}
               >
@@ -113,7 +113,7 @@ export default function Sidebar({
             </div>
           ))}
           {sessions.length === 0 && (
-            <div className="text-xs text-center py-4" style={{ color: 'var(--text-2)' }}>
+            <div className="text-xs text-center py-4" style={{ color: 'var(--text-primary-700)' }}>
               No chat history
             </div>
           )}
@@ -121,25 +121,25 @@ export default function Sidebar({
 
         {/* Quick Chunking Settings Panel */}
         <div className="p-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--border)', background: 'var(--glass-input)' }}>
-          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Quick Chunking Settings</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary-700)' }}>Quick Chunking Settings</h2>
           
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col w-1/2">
-              <label className="text-[10px] mb-1" style={{ color: 'var(--text-2)' }}>Chunk Size</label>
+              <label className="text-[10px] mb-1" style={{ color: 'var(--text-primary-700)' }}>Chunk Size</label>
               <input 
                 type="number" 
                 value={chunkSize}
                 onChange={e => setChunkSize(Number(e.target.value))}
-                className="bg-black/10 border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-1)] outline-none focus:border-indigo-500 transition-colors" 
+                className="bg-black/10 border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-primary-900)] outline-none focus:border-indigo-500 transition-colors" 
               />
             </div>
             <div className="flex flex-col w-1/2">
-              <label className="text-[10px] mb-1" style={{ color: 'var(--text-2)' }}>Overlap</label>
+              <label className="text-[10px] mb-1" style={{ color: 'var(--text-primary-700)' }}>Overlap</label>
               <input 
                 type="number" 
                 value={chunkOverlap}
                 onChange={e => setChunkOverlap(Number(e.target.value))}
-                className="bg-black/10 border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-1)] outline-none focus:border-indigo-500 transition-colors" 
+                className="bg-black/10 border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-primary-900)] outline-none focus:border-indigo-500 transition-colors" 
               />
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function Sidebar({
             onClick={handleReingest}
             disabled={isReingesting}
             className={`w-full py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
-              isReingesting ? 'bg-fuchsia-500/50 text-fuchsia-200 cursor-not-allowed' : 'bg-fuchsia-500 text-white hover:bg-fuchsia-400'
+              isReingesting ? 'bg-fuchsia-500/50 text-fuchsia-200 cursor-not-allowed' : 'bg-fuchsia-500 text-primary-900 hover:bg-fuchsia-400'
             }`}
           >
             {isReingesting ? (

@@ -7,8 +7,8 @@ import ThemeToggle from './ThemeToggle'
 const glass = {
   background:    'var(--glass-bg)',
   border:        '1px solid var(--border)',
-  backdropFilter:'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
+  
+  
 }
 
 export default function FloatingNav() {
@@ -31,18 +31,18 @@ export default function FloatingNav() {
       </div>
 
       {/* Links */}
-      <div className="hidden md:flex items-center gap-7 text-sm font-medium" style={{ color: 'var(--text-2)' }}>
-        <a href="#features" className="hover:opacity-100 transition-opacity" style={{ color: 'var(--text-2)' }}>Features</a>
-        <a href="#tech"     className="hover:opacity-100 transition-opacity" style={{ color: 'var(--text-2)' }}>Tech</a>
-        <a href="#security" className="hover:opacity-100 transition-opacity" style={{ color: 'var(--text-2)' }}>Security</a>
+      <div className="hidden md:flex items-center gap-7 text-sm font-medium" style={{ color: 'var(--text-primary-700)' }}>
+        <a href="#features" className="hover:opacity-100 transition-opacity" style={{ color: 'var(--text-primary-700)' }}>Features</a>
+        <a href="#tech"     className="hover:opacity-100 transition-opacity" style={{ color: 'var(--text-primary-700)' }}>Tech</a>
+        <a href="#security" className="hover:opacity-100 transition-opacity" style={{ color: 'var(--text-primary-700)' }}>Security</a>
       </div>
 
       {/* Right side */}
       <div className="flex items-center gap-3">
         {/* Social icons */}
         <div className="hidden sm:flex items-center gap-3 pr-3" style={{ borderRight: '1px solid var(--border)' }}>
-          <a href="#" style={{ color: 'var(--text-2)' }} className="hover:opacity-80 transition-opacity"><Code size={17} /></a>
-          <a href="#" style={{ color: 'var(--text-2)' }} className="hover:opacity-80 transition-opacity"><Globe size={17} /></a>
+          <a href="#" style={{ color: 'var(--text-primary-700)' }} className="hover:opacity-80 transition-opacity"><Code size={17} /></a>
+          <a href="#" style={{ color: 'var(--text-primary-700)' }} className="hover:opacity-80 transition-opacity"><Globe size={17} /></a>
         </div>
 
         <ThemeToggle />
@@ -51,7 +51,7 @@ export default function FloatingNav() {
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            style={{ ...glass, color: 'var(--text-1)' }}
+            style={{ ...glass, color: 'var(--text-primary-900)' }}
             className="px-4 py-1.5 rounded-full text-sm font-semibold"
           >
             Launch App

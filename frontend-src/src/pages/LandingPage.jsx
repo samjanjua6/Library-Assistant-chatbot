@@ -7,7 +7,7 @@ import SecuritySection from '../components/SecuritySection'
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen font-sans text-white">
+    <div className="relative min-h-screen font-sans text-primary-900">
       <AnimatedMeshBackground />
 
       <FloatingNav />

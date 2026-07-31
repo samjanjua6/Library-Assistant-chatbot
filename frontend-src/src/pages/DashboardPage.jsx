@@ -52,9 +52,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen relative font-sans flex flex-col text-white">
+    <div className="min-h-screen relative font-sans flex flex-col text-primary-900">
       <AnimatedMeshBackground />
-      <header className="relative z-20 px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-xl">
+      <header className="relative z-20 px-6 py-4 border-b border-edge flex justify-between items-center bg-white ">
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">
           Zylo Dashboard
         </h1>
@@ -67,8 +67,8 @@ export default function DashboardPage() {
 
       <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-10">
         <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-2">My Active Loans</h2>
-          <p className="text-[var(--text-2)]">Manage the books you are currently borrowing.</p>
+          <h2 className="text-primary-500xl font-semibold mb-2">My Active Loans</h2>
+          <p className="text-[var(--text-primary-700)]">Manage the books you are currently borrowing.</p>
         </div>
 
         {loading ? (
@@ -80,11 +80,11 @@ export default function DashboardPage() {
             {error}
           </div>
         ) : loans.length === 0 ? (
-          <div className="text-center py-20 px-6 rounded-[2.5rem] bg-white/5 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]">
+          <div className="text-center py-20 px-6 rounded-[2.5rem] bg-white  border border-edge shadow-card">
             <div className="text-6xl mb-4 opacity-50">📚</div>
             <h3 className="text-xl font-medium mb-2">No Active Loans</h3>
-            <p className="text-[var(--text-2)] mb-6">You haven't borrowed any books yet.</p>
-            <button onClick={() => navigate('/chat')} className="px-6 py-2 rounded-full bg-sky-500 hover:bg-sky-400 text-white font-medium transition-colors">
+            <p className="text-[var(--text-primary-700)] mb-6">You haven't borrowed any books yet.</p>
+            <button onClick={() => navigate('/chat')} className="px-6 py-2 rounded-full bg-sky-500 hover:bg-sky-400 text-primary-900 font-medium transition-colors">
               Talk to the Assistant to Borrow a Book
             </button>
           </div>
@@ -100,7 +100,7 @@ export default function DashboardPage() {
               const isLate = daysLeft < 0
 
               return (
-                <div key={loan.id} className="rounded-3xl p-6 flex flex-col gap-4 border border-white/20 bg-white/5 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div key={loan.id} className="rounded-3xl p-6 flex flex-col gap-4 border border-edge bg-white  shadow-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                   <div>
                     <h3 className="text-lg font-bold text-sky-100">{loan.title}</h3>
                     <p className="text-sm text-sky-400/80">by {loan.author}</p>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                   
                   <div className="flex-1">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-[var(--text-2)]">Time remaining</span>
+                      <span className="text-[var(--text-primary-700)]">Time remaining</span>
                       <span className={isLate ? 'text-rose-400 font-bold' : 'text-emerald-400 font-medium'}>
                         {isLate ? 'Overdue' : `${daysLeft} days left`}
                       </span>
@@ -119,14 +119,14 @@ export default function DashboardPage() {
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
-                    <div className="mt-2 text-xs text-[var(--text-2)]">
+                    <div className="mt-2 text-xs text-[var(--text-primary-700)]">
                       Due: {due.toLocaleDateString()}
                     </div>
                   </div>
 
                   <button 
                     onClick={() => handleReturn(loan.book_id)}
-                    className="mt-2 w-full py-2.5 rounded-xl bg-[var(--glass-hi)] hover:bg-sky-500 hover:text-white border border-[var(--border)] font-medium text-sm transition-all flex items-center justify-center gap-2 group"
+                    className="mt-2 w-full py-2.5 rounded-xl bg-[var(--glass-hi)] hover:bg-sky-500 hover:text-primary-900 border border-[var(--border)] font-medium text-sm transition-all flex items-center justify-center gap-2 group"
                   >
                     <span>Return Book</span>
                     <svg className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">

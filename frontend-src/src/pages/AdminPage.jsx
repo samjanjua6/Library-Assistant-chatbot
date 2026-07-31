@@ -167,8 +167,8 @@ function KnowledgeBaseManager() {
             <svg className="w-10 h-10 text-fuchsia-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="text-sm font-semibold text-[var(--text-1)]">Drop files here or click to browse</p>
-            <p className="text-xs text-[var(--text-2)]">PDF · TXT · MD · DOCX · CSV · JSON · XLSX</p>
+            <p className="text-sm font-semibold text-[var(--text-primary-900)]">Drop files here or click to browse</p>
+            <p className="text-xs text-[var(--text-primary-700)]">PDF · TXT · MD · DOCX · CSV · JSON · XLSX</p>
           </div>
         )}
       </div>
@@ -179,9 +179,9 @@ function KnowledgeBaseManager() {
           <p className="text-xs font-semibold text-fuchsia-400 uppercase tracking-wide mb-2">Chunking Settings</p>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-[var(--text-2)] flex items-center gap-1">
+          <label className="text-xs text-[var(--text-primary-700)] flex items-center gap-1">
             Chunk Size
-            <span className="text-[10px] text-[var(--text-2)] opacity-60">(characters)</span>
+            <span className="text-[10px] text-[var(--text-primary-700)] opacity-60">(characters)</span>
           </label>
           <input
             type="number" min="100" max="4000" step="100"
@@ -189,12 +189,12 @@ function KnowledgeBaseManager() {
             onChange={e => setChunkSize(parseInt(e.target.value))}
             className="bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fuchsia-500 transition-colors"
           />
-          <p className="text-[10px] text-[var(--text-2)] opacity-60">How many characters per chunk. Smaller = more precise, larger = more context.</p>
+          <p className="text-[10px] text-[var(--text-primary-700)] opacity-60">How many characters per chunk. Smaller = more precise, larger = more context.</p>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-[var(--text-2)] flex items-center gap-1">
+          <label className="text-xs text-[var(--text-primary-700)] flex items-center gap-1">
             Chunk Overlap
-            <span className="text-[10px] text-[var(--text-2)] opacity-60">(characters)</span>
+            <span className="text-[10px] text-[var(--text-primary-700)] opacity-60">(characters)</span>
           </label>
           <input
             type="number" min="0" max="500" step="50"
@@ -202,7 +202,7 @@ function KnowledgeBaseManager() {
             onChange={e => setChunkOverlap(parseInt(e.target.value))}
             className="bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fuchsia-500 transition-colors"
           />
-          <p className="text-[10px] text-[var(--text-2)] opacity-60">How many characters overlap between chunks. Helps maintain context at boundaries.</p>
+          <p className="text-[10px] text-[var(--text-primary-700)] opacity-60">How many characters overlap between chunks. Helps maintain context at boundaries.</p>
         </div>
       </div>
 
@@ -216,7 +216,7 @@ function KnowledgeBaseManager() {
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{doc.filename}</p>
-                <p className="text-xs text-[var(--text-2)]">{formatBytes(doc.size_bytes)}</p>
+                <p className="text-xs text-[var(--text-primary-700)]">{formatBytes(doc.size_bytes)}</p>
               </div>
               <button 
                 onClick={() => setFileToDelete(doc.filename)}
@@ -231,13 +231,13 @@ function KnowledgeBaseManager() {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-center text-[var(--text-2)] py-4">No documents in the knowledge base yet.</p>
+        <p className="text-sm text-center text-[var(--text-primary-700)] py-4">No documents in the knowledge base yet.</p>
       )}
 
       {docs.length > 0 && (
                   <button
                     onClick={() => setConfirmClearAll(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500 hover:text-white transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 text-xs font-semibold hover:bg-rose-500 hover:text-primary-900 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
                   >  Clear All Documents
         </button>
       )}
@@ -416,17 +416,17 @@ export default function AdminPage() {
 
   if (error === 'FORBIDDEN') {
     return (
-      <div className="min-h-screen relative font-sans flex flex-col items-center justify-center p-6 text-white">
+      <div className="min-h-screen relative font-sans flex flex-col items-center justify-center p-6 text-primary-900">
         <AnimatedMeshBackground />
-        <div className="max-w-md w-full relative z-10 bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-8 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]">
+        <div className="max-w-md w-full relative z-10 bg-white  border border-edge rounded-2xl p-8 text-center shadow-card">
           <div className="text-6xl mb-6">🔒</div>
-          <h1 className="text-2xl font-bold text-rose-400 mb-4">Restricted Access</h1>
-          <p className="text-[var(--text-2)] mb-8">
+          <h1 className="text-primary-700xl font-bold text-rose-400 mb-4">Restricted Access</h1>
+          <p className="text-[var(--text-primary-700)] mb-8">
             Sorry, you don't have the necessary administrator permissions to view this page.
           </p>
           <button 
             onClick={() => navigate('/chat')}
-            className="w-full py-3 rounded-xl bg-[var(--glass-hi)] hover:bg-sky-500 hover:text-white border border-[var(--border)] font-semibold transition-all"
+            className="w-full py-3 rounded-xl bg-[var(--glass-hi)] hover:bg-sky-500 hover:text-primary-900 border border-[var(--border)] font-semibold transition-all"
           >
             Return to Chat
           </button>
@@ -436,9 +436,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen relative font-sans flex flex-col text-white">
+    <div className="min-h-screen relative font-sans flex flex-col text-primary-900">
       <AnimatedMeshBackground />
-      <header className="relative z-20 px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5 backdrop-blur-xl sticky top-0 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+      <header className="relative z-20 px-6 py-4 border-b border-edge flex justify-between items-center bg-white  sticky top-0 shadow-card">
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
           Zylo Admin Panel
         </h1>
@@ -487,10 +487,10 @@ export default function AdminPage() {
               <input type="text" placeholder="Author" required value={newAuthor} onChange={e => setNewAuthor(e.target.value)} className="bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 transition-colors" />
               <input type="text" placeholder="Genre" value={newGenre} onChange={e => setNewGenre(e.target.value)} className="bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 transition-colors" />
               <div className="flex gap-2 items-center">
-                <label className="text-sm text-[var(--text-2)] whitespace-nowrap">Total Copies:</label>
+                <label className="text-sm text-[var(--text-primary-700)] whitespace-nowrap">Total Copies:</label>
                 <input type="number" min="1" required value={newTotalCopies} onChange={e => setNewTotalCopies(e.target.value)} className="w-full bg-[var(--glass-hi)] border border-[var(--border)] rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 transition-colors" />
               </div>
-              <button type="submit" className="md:col-span-2 py-3 mt-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition-colors shadow-lg shadow-emerald-500/20">
+              <button type="submit" className="md:col-span-2 py-3 mt-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-primary-900 font-semibold transition-colors shadow-lg shadow-emerald-500/20">
                 Add to Catalog
               </button>
             </form>
@@ -521,7 +521,7 @@ export default function AdminPage() {
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[var(--border)] text-sm text-[var(--text-2)]">
+                    <tr className="border-b border-[var(--border)] text-sm text-[var(--text-primary-700)]">
                       <th className="pb-3 pr-4 font-medium">ID</th>
                       <th className="pb-3 pr-4 font-medium">Title & Author</th>
                       <th className="pb-3 pr-4 font-medium">Total</th>
@@ -531,10 +531,10 @@ export default function AdminPage() {
                   <tbody>
                     {books.map(book => (
                       <tr key={book.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--glass-hi)] transition-colors">
-                        <td className="py-3 pr-4 text-xs text-[var(--text-2)]">#{book.id}</td>
+                        <td className="py-3 pr-4 text-xs text-[var(--text-primary-700)]">#{book.id}</td>
                         <td className="py-3 pr-4">
                           <div className="font-semibold text-sky-100">{book.title}</div>
-                          <div className="text-xs text-[var(--text-2)]">{book.author}</div>
+                          <div className="text-xs text-[var(--text-primary-700)]">{book.author}</div>
                         </td>
                         <td className="py-3 pr-4">
                           <input 
@@ -569,7 +569,7 @@ export default function AdminPage() {
                 >
                   Previous
                 </button>
-                <span className="text-sm text-[var(--text-2)]">
+                <span className="text-sm text-[var(--text-primary-700)]">
                   Page {page} of {Math.ceil(totalBooks / 10)} ({totalBooks} books total)
                 </span>
                 <button 
@@ -602,7 +602,7 @@ export default function AdminPage() {
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[var(--border)] text-sm text-[var(--text-2)]">
+                    <tr className="border-b border-[var(--border)] text-sm text-[var(--text-primary-700)]">
                       <th className="pb-3 pr-4 font-medium">User</th>
                       <th className="pb-3 pr-4 font-medium">Joined</th>
                       <th className="pb-3 font-medium">Administrator</th>
@@ -613,9 +613,9 @@ export default function AdminPage() {
                       <tr key={user.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--glass-hi)] transition-colors">
                         <td className="py-3 pr-4">
                           <div className="font-semibold text-sky-100">@{user.username}</div>
-                          <div className="text-xs text-[var(--text-2)]">{user.email}</div>
+                          <div className="text-xs text-[var(--text-primary-700)]">{user.email}</div>
                         </td>
-                        <td className="py-3 pr-4 text-xs text-[var(--text-2)]">
+                        <td className="py-3 pr-4 text-xs text-[var(--text-primary-700)]">
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="py-3">
@@ -627,7 +627,7 @@ export default function AdminPage() {
                               onChange={() => handleToggleRole(user.id)}
                             />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                            <span className="ml-3 text-xs font-medium text-[var(--text-2)]">
+                            <span className="ml-3 text-xs font-medium text-[var(--text-primary-700)]">
                               {user.is_admin ? 'Admin' : 'User'}
                             </span>
                           </label>
@@ -653,7 +653,7 @@ export default function AdminPage() {
           
           <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
             {loading ? null : loans.length === 0 ? (
-              <div className="text-center py-10 text-[var(--text-2)] text-sm">No active loans right now.</div>
+              <div className="text-center py-10 text-[var(--text-primary-700)] text-sm">No active loans right now.</div>
             ) : (
               loans.map(loan => {
                 const isLate = new Date(loan.due_date) < new Date()
@@ -669,7 +669,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-sm">{loan.title}</h4>
-                      <p className="text-xs text-[var(--text-2)] mt-1">Due: {new Date(loan.due_date).toLocaleDateString()}</p>
+                      <p className="text-xs text-[var(--text-primary-700)] mt-1">Due: {new Date(loan.due_date).toLocaleDateString()}</p>
                     </div>
                   </div>
                 )

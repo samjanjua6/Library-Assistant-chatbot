@@ -9,8 +9,8 @@ import AnimatedMeshBackground from '../components/AnimatedMeshBackground'
 const glass = {
   background:    'rgba(255, 255, 255, 0.05)',
   border:        '1px solid rgba(255, 255, 255, 0.2)',
-  backdropFilter:'blur(24px)',
-  WebkitBackdropFilter: 'blur(24px)',
+  
+  
   boxShadow:     'inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 32px rgba(0,0,0,0.5)',
 }
 
@@ -28,7 +28,7 @@ function SegmentedControl({ mode, onChange }) {
           aria-selected={mode === m}
           onClick={() => onChange(m)}
           className="flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative"
-          style={{ color: mode === m ? 'var(--text-1)' : 'var(--text-2)' }}
+          style={{ color: mode === m ? 'var(--text-primary-900)' : 'var(--text-primary-700)' }}
         >
           {mode === m && (
             <motion.span
@@ -98,7 +98,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans text-white">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans text-primary-900">
       <AnimatedMeshBackground />
       {/* Theme toggle (fixed top-right) */}
       <div className="fixed top-5 right-5 z-50">
@@ -113,7 +113,7 @@ export default function AuthPage() {
           transition={{ type: 'spring', stiffness: 150, damping: 15 }}
           className="flex items-center justify-center gap-2.5 mb-7"
         >
-          <span className="text-2xl leading-none" aria-hidden>⚡</span>
+          <span className="text-primary-700xl leading-none" aria-hidden>⚡</span>
           <span className="text-[1.65rem] font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent tracking-tight">
             Zylo
           </span>
@@ -156,7 +156,7 @@ export default function AuthPage() {
           {/* ── Divider ── */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>or</span>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-primary-500)' }}>or</span>
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
@@ -169,7 +169,7 @@ export default function AuthPage() {
             style={{
               background: 'var(--glass-input)',
               border: '1px solid var(--border)',
-              color: 'var(--text-1)',
+              color: 'var(--text-primary-900)',
             }}
           >
             {/* Google "G" SVG */}
@@ -184,7 +184,7 @@ export default function AuthPage() {
           </motion.button>
         </motion.main>
 
-        <p className="text-center text-xs mt-5" style={{ color: 'var(--text-3)' }}>
+        <p className="text-center text-xs mt-5" style={{ color: 'var(--text-primary-500)' }}>
           Secured with JWT · Powered by FastAPI
         </p>
       </div>

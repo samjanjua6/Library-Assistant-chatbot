@@ -8,7 +8,7 @@ export default function InputField({ id, label, ...inputProps }) {
       <label
         htmlFor={id}
         className="text-[0.82rem] font-medium"
-        style={{ color: 'var(--text-2)' }}
+        style={{ color: 'var(--text-primary-700)' }}
       >
         {label}
       </label>
@@ -17,7 +17,7 @@ export default function InputField({ id, label, ...inputProps }) {
         style={{
           background:    'var(--glass-input)',
           border:        '1px solid var(--border)',
-          color:         'var(--text-1)',
+          color:         'var(--text-primary-900)',
         }}
         className="w-full px-4 py-3 rounded-xl text-[0.93rem] outline-none placeholder:opacity-40 transition-all duration-150 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400/50"
         {...inputProps}

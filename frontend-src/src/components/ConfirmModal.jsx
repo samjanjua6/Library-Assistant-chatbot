@@ -14,7 +14,7 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/60 "
           />
 
           {/* Modal Card */}
@@ -23,9 +23,9 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="relative z-10 w-full max-w-sm rounded-[2rem] p-6 text-white text-center
-                       bg-white/5 backdrop-blur-xl border border-white/20 
-                       shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_rgba(0,0,0,0.5)]"
+            className="relative z-10 w-full max-w-sm rounded-[2rem] p-6 text-primary-900 text-center
+                       bg-white  border border-edge 
+                       shadow-card"
           >
             <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
               <svg className="w-7 h-7 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,12 +34,12 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
             </div>
             
             <h3 className="text-xl font-bold mb-2">{title}</h3>
-            <p className="text-white/70 mb-6 text-sm leading-relaxed">{message}</p>
+            <p className="text-primary-700 mb-6 text-sm leading-relaxed">{message}</p>
             
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors font-medium border border-white/10"
+                className="flex-1 py-2.5 rounded-xl bg-white hover:bg-white/20 transition-colors font-medium border border-edge"
               >
                 Cancel
               </button>

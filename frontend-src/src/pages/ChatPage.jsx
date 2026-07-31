@@ -436,7 +436,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden relative font-sans text-white">
+    <div className="flex flex-col h-screen overflow-hidden relative font-sans text-primary-900">
       <AnimatedMeshBackground />
       <TopBar 
         username={username} 

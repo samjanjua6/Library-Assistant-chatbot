@@ -39,14 +39,14 @@ export default function ThemeToggle() {
       style={{
         background: 'var(--glass-bg)',
         border: '1px solid var(--border)',
-        backdropFilter: 'blur(12px)',
+        
       }}
     >
       {/* Sliding thumb */}
       <motion.div
         animate={{ x: isDark ? 2 : 30 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="absolute w-5 h-5 rounded-full flex items-center justify-center text-white"
+        className="absolute w-5 h-5 rounded-full flex items-center justify-center text-primary-900"
         style={{
           background: 'linear-gradient(135deg, #3498DB, #2980B9)',
           boxShadow: '0 2px 8px rgba(52, 152, 219, 0.5)',
@@ -62,10 +62,10 @@ export default function ThemeToggle() {
       </motion.div>
 
       {/* Track icons (dim) */}
-      <span className="absolute left-[6px] opacity-30 pointer-events-none" style={{ color: 'var(--text-1)' }}>
+      <span className="absolute left-[6px] opacity-30 pointer-events-none" style={{ color: 'var(--text-primary-900)' }}>
         <MoonIcon />
       </span>
-      <span className="absolute right-[6px] opacity-30 pointer-events-none" style={{ color: 'var(--text-1)' }}>
+      <span className="absolute right-[6px] opacity-30 pointer-events-none" style={{ color: 'var(--text-primary-900)' }}>
         <SunIcon />
       </span>
     </motion.button>

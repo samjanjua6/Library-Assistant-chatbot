@@ -69,7 +69,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
   return (
     <footer
       className="shrink-0 px-6 pb-6 pt-3"
-      style={{ borderTop: '1px solid var(--border)', background: 'var(--glass-bg)', backdropFilter: 'blur(20px)' }}
+      style={{ borderTop: '1px solid var(--border)', background: 'var(--glass-bg)',  }}
     >
       {fileErr && (
         <p className="text-xs text-rose-400 text-center mb-2 animate-pulse">{fileErr}</p>
@@ -80,7 +80,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
         style={{
           background:  'var(--glass-input)',
           border:      '1px solid var(--border)',
-          backdropFilter: 'blur(16px)',
+          
         }}
         onFocusCapture={e => e.currentTarget.style.borderColor = 'rgba(52,152,219,0.45)'}
         onBlurCapture={e =>  e.currentTarget.style.borderColor = 'var(--border)'}
@@ -103,7 +103,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
           title="Attach a file (PDF, DOCX, TXT, MD, CSV, XLSX, JSON — max 20 MB)"
           aria-label="Attach file"
           className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-150 hover:opacity-85 hover:scale-105 active:scale-100 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
+          style={{ background: 'var(--glass-hi)', border: '1px solid var(--border)', color: 'var(--text-primary-700)' }}
         >
           <PaperclipIcon />
         </button>
@@ -117,20 +117,20 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
           aria-label="Message input"
           className="flex-1 bg-transparent outline-none text-sm disabled:cursor-not-allowed"
           style={{
-            color: 'var(--text-1)',
+            color: 'var(--text-primary-900)',
           }}
         />
         <button
           type="submit"
           disabled={isLocked}
           aria-label="Send message"
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 transition-all duration-150 hover:opacity-85 hover:scale-105 active:scale-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-primary-900 shrink-0 transition-all duration-150 hover:opacity-85 hover:scale-105 active:scale-100 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(135deg,#3498DB,#2980B9)', boxShadow: '0 2px 12px rgba(52,152,219,0.4)' }}
         >
           <SendIcon />
         </button>
       </form>
-      <p className="text-center text-xs mt-2.5" style={{ color: 'var(--text-3)' }}>
+      <p className="text-center text-xs mt-2.5" style={{ color: 'var(--text-primary-500)' }}>
         Secured with JWT · Real-time via WebSocket
       </p>
     </footer>

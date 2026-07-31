@@ -4,8 +4,8 @@ import { ShieldAlert, KeyRound, Lock, Trash2, CheckCircle2 } from 'lucide-react'
 const glass = {
   background:    'var(--glass-bg)',
   border:        '1px solid var(--border)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
+  
+  
 }
 
 export default function SecuritySection() {
@@ -48,15 +48,15 @@ export default function SecuritySection() {
             <h2 className="text-xs font-semibold tracking-widest uppercase bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
               Security
             </h2>
-            <h3 className="text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>
+            <h3 className="text-primary-500xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary-900)' }}>
               Protected by Enterprise-Grade Security.
             </h3>
-            <p className="text-sm md:text-base font-light leading-relaxed" style={{ color: 'var(--text-2)' }}>
+            <p className="text-sm md:text-base font-light leading-relaxed" style={{ color: 'var(--text-primary-700)' }}>
               Your conversations are private and secured using stateless tokens, strict authentication scopes, and clean data cascade pruning rules.
             </p>
             <div className="flex flex-col gap-3 mt-2">
               {["No plain-text passwords", "One-click OAuth 2.0 tokens", "Automatic data cleaning"].map((text, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-1)' }}>
+                <div key={idx} className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-primary-900)' }}>
                   <CheckCircle2 size={16} className="text-emerald-400" />
                   {text}
                 </div>
@@ -74,7 +74,7 @@ export default function SecuritySection() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: idx * 0.1, type: 'spring', stiffness: 100, damping: 15 }}
                 style={{ ...glass }}
-                className="p-6 rounded-3xl flex gap-5 items-start hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300"
+                className="p-6 rounded-3xl flex gap-5 items-start hover:bg-black/5 dark:hover:bg-white transition-all duration-300"
               >
                 <div 
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -83,8 +83,8 @@ export default function SecuritySection() {
                   {point.icon}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <h4 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{point.title}</h4>
-                  <p className="text-xs font-light leading-relaxed" style={{ color: 'var(--text-2)' }}>{point.description}</p>
+                  <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary-900)' }}>{point.title}</h4>
+                  <p className="text-xs font-light leading-relaxed" style={{ color: 'var(--text-primary-700)' }}>{point.description}</p>
                 </div>
               </motion.div>
             ))}
