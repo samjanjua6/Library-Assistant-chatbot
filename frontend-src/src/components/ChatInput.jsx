@@ -14,12 +14,20 @@ const PaperclipIcon = () => (
 )
 
 const MAX_BYTES = 20 * 1024 * 1024   // 20 MB
-const ALLOWED_EXTS = new Set(['.pdf', '.docx', '.txt', '.md', '.csv', '.xlsx', '.json'])
+const ALLOWED_EXTS = new Set(['.pdf', '.docx', '.txt', '.md', '.csv', '.xlsx', '.json', '.jpg', '.jpeg', '.png', '.webp'])
 
-export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload, sessionId }) {
+export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload, sessionId, autoFillText, setAutoFillText }) {
   const inputRef  = useRef(null)
   const fileRef   = useRef(null)
   const [fileErr, setFileErr] = useState('')
+
+  // If the parent component passes autoFillText, inject it into the input box
+  if (autoFillText && inputRef.current) {
+    const currentVal = inputRef.current.value
+    inputRef.current.value = currentVal ? currentVal + '\n\n' + autoFillText : autoFillText
+    setAutoFillText('') // Clear it so it doesn't loop
+    inputRef.current.focus()
+  }
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -90,7 +98,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onFileUpload,
           ref={fileRef}
           type="file"
           className="hidden"
-          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json,.pptx"
+          accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.json,.pptx,.jpg,.jpeg,.png,.webp"
           onChange={handleFileChange}
           aria-label="Upload file"
         />
